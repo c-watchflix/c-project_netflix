@@ -19,6 +19,16 @@ namespace ap3_jintegration.classe
 
 
         //controller
+        public User(int Id, string Nom, string Prenom, string Courriel, string Pseudo, string Mdp, bool Is_admin)
+        {
+            this.id = Id;
+            this.Nom = Nom;
+            this.Prenom = Prenom;
+            this.Courriel = Courriel;
+            this.Pseudo = Pseudo;
+            this.Mdp = Mdp;
+            this.Is_admin = Is_admin;
+        }
         public User(string Nom, string Prenom, string Courriel, string Pseudo, string Mdp, bool Is_admin)
         {
             this.id = 0;
