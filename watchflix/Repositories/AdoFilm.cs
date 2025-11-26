@@ -10,16 +10,6 @@ namespace watchflix.Repositories
 {
     internal class AdoEpreuve : Ado
     {
-        public static void getAll(Models.Film film)
-        {
-            open();
-            SqlCommand cmd = new SqlCommand();
-            cmd.Connection = connexion;
-            cmd.CommandText = "SELECT * FROM Film";
-            cmd.ExecuteNonQuery();                  
-            close();
-        } 
-
         public static List<Models.Film> getAll()
         {
             List<Models.Film> films = new List<Models.Film>();
