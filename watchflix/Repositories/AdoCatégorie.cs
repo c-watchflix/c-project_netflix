@@ -5,8 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace watchflix.Repositories
-{
+namespace watchflix.Repositories; 
     public class AdoCatégories : Ado
     {
         public static void CreateCategorie(Categorie uneCategorie)
@@ -74,33 +73,4 @@ namespace watchflix.Repositories
             cmd.ExecuteNonQuery();
             close();
         }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     }
-}
