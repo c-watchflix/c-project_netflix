@@ -74,7 +74,7 @@ namespace watchflix.Repositories
             close();
         }
 
-        public static void addCategorieToFilm(int Id_film, int Id_categorie
+        public static void addCategorieToFilm(int Id_film, int Id_categorie)
         {
             open();
             SqlCommand cmd = new SqlCommand();
