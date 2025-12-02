@@ -5,9 +5,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using watchflix.Repositories;
-using ap3_jintegration.classe;
+using watchflix.Models;
 
-namespace c_project_netflix.ado
+namespace watchflix.Repositories
 {
     internal class AdoUser : Ado
     {
