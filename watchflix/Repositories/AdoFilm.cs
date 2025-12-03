@@ -1,17 +1,18 @@
 using System;
 using System.Collections.Generic;
-using System.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using watchflix.Models;
 
+
 namespace watchflix.Repositories
 {
     internal class AdoEpreuve : Ado
     {
-        public static List<Models.Film> getAll()
+        public static List<Film> getAll()
         {
             List<Models.Film> films = new List<Models.Film>();
             open();
@@ -22,7 +23,7 @@ namespace watchflix.Repositories
 
             while (reader.Read())
             {
-                films.Add(new Models.Film(reader.GetInt32(0), reader.GetString(1), reader.GetInt32(2), reader.GetString(3)));
+                //films.Add(new Film(reader.GetInt32(0), reader.GetString(1), reader.GetInt32(2), reader.GetString(3)));
             }
 
             close();
@@ -36,7 +37,7 @@ namespace watchflix.Repositories
             SqlCommand cmd = new SqlCommand();
             cmd.Connection = connexion;
             cmd.CommandText = "SELECT * FROM film WHERE id_film = @Id_film";
-            cmd.Parameters.AddWithValue("@Id_film", film.id_film);
+            cmd.Parameters.AddWithValue("@Id_film", film.id);
             cmd.ExecuteNonQuery();
             close();
         }
@@ -47,7 +48,7 @@ namespace watchflix.Repositories
             SqlCommand cmd = new SqlCommand();
             cmd.Connection = connexion;
             cmd.CommandText = "SELECT * FROM Film  WHERE titre_film = @Titre_film";
-            cmd.Parameters.AddWithValue("@Titre_film", film.titre_film);
+            cmd.Parameters.AddWithValue("@Titre_film", film.titre);
             cmd.ExecuteNonQuery();
             close();
         }

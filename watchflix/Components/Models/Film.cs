@@ -4,13 +4,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ap3_jintegration.classe
+namespace watchflix.Models
 { 
     public class Film
     {
         //attributs
-        private int id;
-        private string titre;
+        public int id;
+        public string titre;
         private TimeOnly duree;
         private DateOnly dte_sortie;
         private string pegi;
