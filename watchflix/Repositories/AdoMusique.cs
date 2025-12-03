@@ -2,6 +2,7 @@ using System;
 using System.Data.SqlClient;   
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.Data.SqlClient;
 
 namespace watchflix.Repositories;
 
