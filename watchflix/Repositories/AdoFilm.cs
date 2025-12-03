@@ -10,7 +10,7 @@ using watchflix.Models;
 
 namespace watchflix.Repositories
 {
-    internal class AdoEpreuve : Ado
+    internal class AdoFilm : Ado
     {
         public static List<Film> getAll()
         {
@@ -23,7 +23,7 @@ namespace watchflix.Repositories
 
             while (reader.Read())
             {
-                //films.Add(new Film(reader.GetInt32(0), reader.GetString(1), reader.GetInt32(2), reader.GetString(3)));
+                films.Add(new Film(reader.GetInt32(0), reader.GetString(1)));
             }
 
             close();
