@@ -1,0 +1,36 @@
+@page "/test-film"
+@rendermode InteractiveServer
+@using watchflix.Models
+@using watchflix.Repositories
+@inject AdoFilm Repo
+
+<PageTitle>Films</PageTitle>
+
+<h1>Ici test films !</h1>
+
+<button class="btn btn-primary" @onclick="GetAll">select all</button>
+<button class="btn btn-primary">select 1 by ID</button>
+<button class="btn btn-primary">select 1 by name</button>
+<button class="btn btn-primary">delete 1</button>
+
+    
+@if (data != null)
+{
+    <ul>
+        @foreach (var film in data)
+        {
+            <li>@film.Titre</li>
+        }
+    </ul>
+}
+
+@code {
+    IEnumerable<Film>? data;
+
+    private void GetAll()
+    {
+        data = AdoFilm.getAll();
+    }
+
+
+}

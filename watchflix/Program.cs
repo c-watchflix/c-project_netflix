@@ -1,10 +1,17 @@
 using watchflix.Components;
+using watchflix.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+builder.Services.AddScoped<AdoFilm>();
+builder.Services.AddScoped<AdoArtiste>();
+builder.Services.AddScoped<AdoCatégories>();
+builder.Services.AddScoped<AdoUser>();
+builder.Services.AddScoped<AdoMusique>();
 
 var app = builder.Build();
 
