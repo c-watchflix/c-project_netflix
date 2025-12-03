@@ -1,0 +1,79 @@
+@page "/test-adomusique"
+@using watchflix.Repositories
+
+<h3>Test AdoMusique</h3>
+
+<div>
+    <button @onclick="GetAllMusique">Récupérer toutes les musiques</button>
+    <button @onclick="GetOneById">Récupérer une musique par ID</button>
+    <button @onclick="GetOneByName">Récupérer une musique par nom</button>
+    <button @onclick="DeleteMusique">Supprimer une musique</button>
+</div>
+
+<h4>Résultats :</h4>
+@if (!string.IsNullOrEmpty(message))
+{
+    <p>@message</p>
+}
+else
+{
+    <p>Aucune action effectuée.</p>
+}
+
+@code {
+    private string message = string.Empty;
+
+    private void GetAllMusique()
+    {
+        Console.WriteLine("Méthode GetAllMusique appelée.");
+        try
+        {
+            AdoMusique.GetAllMusique();
+            message = "Toutes les musiques ont été récupérées.";
+        }
+        catch (Exception ex)
+        {
+            message = $"Erreur : {ex.Message}";
+        }
+    }
+
+    private void GetOneById()
+    {
+        try
+        {
+            AdoMusique.GetOneById(1);
+            message = "Musique avec ID 1 récupérée.";
+        }
+        catch (Exception ex)
+        {
+            message = $"Erreur : {ex.Message}";
+        }
+    }
+
+    private void GetOneByName()
+    {
+        try
+        {
+            AdoMusique.GetOneByName("Chanson 1");
+            message = "Musique avec le nom 'Chanson 1' récupérée.";
+        }
+        catch (Exception ex)
+        {
+            message = $"Erreur : {ex.Message}";
+        }
+    }
+
+    private void DeleteMusique()
+    {
+        try
+        {
+            AdoMusique.DeleteMusique(1);
+            message = "Musique avec ID 1 supprimée.";
+        }
+        catch (Exception ex)
+        {
+            message = $"Erreur : {ex.Message}";
+        }
+    }
+}
+
