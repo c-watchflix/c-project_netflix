@@ -11,14 +11,14 @@ namespace watchflix.Models
         //attributs
         public int id;
         public string titre;
-        private TimeOnly duree;
-        private DateOnly dte_sortie;
-        private string pegi;
-        private string jacquette;
-        private string resume;
-        private string distribution;
-        private string bande_annonce;
-        private string realisateur;
+        private TimeOnly? duree;
+        private DateOnly? dte_sortie;
+        private string? pegi;
+        private string? jacquette;
+        private string? resume;
+        private string? distribution;
+        private string? bande_annonce;
+        private string? realisateur;
 
 
         //controller
@@ -50,12 +50,18 @@ namespace watchflix.Models
             this.realisateur = Realisateur;
         }
 
+        public Film(int id, string titre)
+        {
+            this.id = id;
+            this.titre = titre;
+        }
+
 
         //accesseurs
         public int Id {get =>id;} 
         public string Titre { get =>titre; set => titre = value;}
-        public TimeOnly Duree { get =>duree; set => duree = value;}
-        public DateOnly Dte_sortie { get =>dte_sortie; set => dte_sortie = value;}
+        public TimeOnly? Duree { get =>duree; set => duree = value;}
+        public DateOnly? Dte_sortie { get =>dte_sortie; set => dte_sortie = value;}
         public string Pegi { get =>pegi; set => pegi = value;}
         public string Jacquette { get =>jacquette; set => jacquette = value;}
         public string Resume { get =>resume; set => resume = value;}
