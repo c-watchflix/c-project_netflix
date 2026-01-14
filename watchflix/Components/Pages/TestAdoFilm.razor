@@ -9,15 +9,38 @@
 <h1>Ici test films !</h1>
 
 <button class="btn btn-primary" @onclick="GetAll">select all</button>
-<button class="btn btn-primary">select 1 by ID</button>
-<button class="btn btn-primary">select 1 by name</button>
-<button class="btn btn-primary">delete 1</button>
+<button class="btn btn-primary" @onclick="GetOneByID">select 1 by ID</button>
+<button class="btn btn-primary" @onclick="GetOneByName">select 1 by name</button>
+<button class="btn btn-primary" @onclick="Delete">delete 1</button>
 
     
-@if (data != null)
+@if (data != null) //si la liste data n'est pas vide
 {
+    <h1>Tous les films</h1>
     <ul>
-        @foreach (var film in data)
+        @foreach (var film in data) // alors pour chaque catégorie présente dans la liste
+        {
+            <li>@film.Titre</li> // je vais faire une ligne
+        }
+    </ul>
+}
+
+@if (oneByID != null)
+{
+    <h1>Selection d'un film</h1>
+    <ul>
+        @foreach (var film in oneByID)
+        {
+            <li>@film.Titre</li>
+        }
+    </ul>
+}
+
+@if (oneByName != null)
+{
+    <h1>recherche d'un film "Zootopie"</h1>
+    <ul>
+        @foreach (var film in oneByName)
         {
             <li>@film.Titre</li>
         }
@@ -26,10 +49,27 @@
 
 @code {
     IEnumerable<Film>? data;
+    IEnumerable<Film>? oneByID;
+    IEnumerable<Film>? oneByName;
 
     private void GetAll()
     {
         data = AdoFilm.getAll();
+    }
+
+    private void GetOneByID()
+    {
+        oneByID = AdoFilm.getOneById(5);
+    }
+
+    private void GetOneByName()
+    {
+        oneByName = AdoFilm.getOneByName("Zootopie");
+    }
+
+    private void Delete()
+    {
+        AdoFilm.delete(1);
     }
 
 
