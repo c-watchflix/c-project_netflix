@@ -13,8 +13,8 @@ namespace watchflix.Repositories
 
         public static void open()
         {
-            string cs = $"Server=172.19.0.7;Database=watchflix;User Id=user_watchflix;Password=pwd_watchflix;TrustServerCertificate=True;MultipleActiveResultSets=True;";
-
+            string cs = $"Data Source=sql.reseau-labo.fr;Initial Catalog=watchflix;User ID=user_watchflix;Password=pwd_watchflix;TrustServerCertificate=True;";
+  
             //string cs = $"Data Source = LAPTOP-9HK09LIE; Initial Catalog = bd_ap3; Integrated Security = True";
             try
             {
@@ -24,7 +24,7 @@ namespace watchflix.Repositories
             }
             catch (SqlException ex)
             {
-                Console.WriteLine(ex.Message);
+                Console.WriteLine("erreur !!! on est dans le catch -> message : " + ex.Message);
             }
         }
 
