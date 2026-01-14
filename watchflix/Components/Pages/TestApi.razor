@@ -1,35 +1,87 @@
 @page "/test-api"
 @rendermode InteractiveServer
 @using watchflix.Services
+@using watchflix.Models
 @inject TmdbService TmdbService
 
-<h3>Test de l'API TMDB</h3>
+<h3>🎬 Test Complet TMDB</h3>
 
-<div style="margin-bottom: 20px;">
-    <label>Nom du film : </label>
-    <input @bind="nomDuFilm" placeholder="Ex: Titanic" />
-    <button @onclick="ChercherFilm">Rechercher</button>
+<div style="margin-bottom: 20px; display:flex; gap:10px;">
+    <input @bind="nomDuFilm" class="form-control" placeholder="Nom du film..." />
+    <button class="btn btn-primary" @onclick="ChercherFilm">🔍 Rechercher</button>
 </div>
 
-@if (!string.IsNullOrEmpty(resultatApi))
+@if (filmSelectionne == null && resultats != null)
 {
-    <div style="background-color: #f0f0f0; padding: 15px; border-radius: 5px;">
-        <h4>Résultat brut de l'API :</h4>
-        <pre>@resultatApi</pre>
+    <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+        @foreach (var film in resultats.Results)
+        {
+            <div style="border:1px solid #ddd; width: 150px; text-align:center; cursor:pointer;" 
+                 @onclick="() => VoirDetails(film.Id)"> <img src="@film.FullImageUrl" style="width:100%;" />
+                <p><strong>@film.Title</strong></p>
+                <button class="btn btn-sm btn-info">Voir fiche complète</button>
+            </div>
+        }
+    </div>
+}
+
+@if (filmSelectionne != null)
+{
+    <button class="btn btn-secondary" @onclick="RetourListe">⬅ Retour à la liste</button>
+    <hr />
+
+    <div style="background-image: url('@filmSelectionne.FullBackdropUrl'); background-size: cover; color: white; padding: 50px; border-radius: 15px; position: relative;">
+        
+        <div style="background-color: rgba(0,0,0,0.8); padding: 30px; border-radius: 10px; display: flex; gap: 30px;">
+            
+            <img src="@filmSelectionne.FullPosterUrl" style="width: 200px; border-radius: 10px;" />
+
+            <div>
+                <h1>@filmSelectionne.Title (@filmSelectionne.AnneeSortie)</h1>
+                <p><strong>⏱ Durée :</strong> @filmSelectionne.Runtime min</p>
+                <p><strong>🎬 Réalisateur :</strong> @(filmSelectionne.Realisateur ?? "Inconnu")</p>
+                
+                <h4>Résumé</h4>
+                <p>@filmSelectionne.Overview</p>
+
+                @if (!string.IsNullOrEmpty(filmSelectionne.YoutubeKey))
+                {
+                    <div style="margin-top: 20px;">
+                        <h4>Bande Annonce</h4>
+                        <iframe width="560" height="315" 
+                                src="https://www.youtube.com/embed/@filmSelectionne.YoutubeKey" 
+                                frameborder="0" allowfullscreen>
+                        </iframe>
+                    </div>
+                }
+                else
+                {
+                    <p style="color:orange;">Pas de bande annonce disponible.</p>
+                }
+            </div>
+        </div>
     </div>
 }
 
 @code {
     private string nomDuFilm = "";
-    private string resultatApi = "";
+    private TmdbSearchResponse? resultats;
+    private MovieDetails? filmSelectionne; // Stocke le film complet
 
     private async Task ChercherFilm()
     {
-        if (!string.IsNullOrWhiteSpace(nomDuFilm))
-        {
-            resultatApi = "Recherche en cours...";
-            // C'est ici qu'on appelle votre service !
-            resultatApi = await TmdbService.SearchMovieByName(nomDuFilm);
-        }
+        filmSelectionne = null; // On cache la fiche détail
+        resultats = await TmdbService.SearchMovieByName(nomDuFilm);
+    }
+
+    private async Task VoirDetails(int id)
+    {
+        // On appelle la nouvelle fonction qui récupère tout (Youtube, Réalisateur, etc.)
+        filmSelectionne = await TmdbService.GetMovieDetails(id);
+    }
+
+    private void RetourListe()
+    {
+        filmSelectionne = null; // On vide la sélection pour réafficher la liste
     }
 }

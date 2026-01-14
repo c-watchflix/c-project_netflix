@@ -1,7 +1,8 @@
 using RestSharp;
 using System.Threading.Tasks;
+using watchflix.Models;
 
-namespace watchflix.Services // Le nom de notre projet
+namespace watchflix.Services
 {
     public class TmdbService
     {
@@ -10,38 +11,33 @@ namespace watchflix.Services // Le nom de notre projet
 
         public TmdbService()
         {
-            // Notre Token d'authentification TMDB
+            // Votre Token
             _token = "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI0ODQ3MzZjNjJiYWZmY2JiYmUxODMyM2UxNGJmMTk1OCIsIm5iZiI6MTc2ODM3Njc2NS4zNDcwMDAxLCJzdWIiOiI2OTY3NDliZDNhZTg1ZDk0YTc4NjYxYTAiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.Zz7ro2ZILWjXQSfoA3ZF1vzSJdrYXw1FFuzo_OxEoBM";
-            
             var options = new RestClientOptions("https://api.themoviedb.org/3");
             _client = new RestClient(options);
         }
 
-        // Cette fonction sert à chercher un film par son nom
-        public async Task<string> SearchMovieByName(string movieName)
+        public async Task<TmdbSearchResponse?> SearchMovieByName(string movieName)
         {
-            // Demande de recherche
             var request = new RestRequest("search/movie");
-            
-            // Authentification
             request.AddHeader("Authorization", "Bearer " + _token);
-            request.AddHeader("accept", "application/json");
-
-            // Paramètres : le nom du film et la langue
             request.AddQueryParameter("query", movieName);
             request.AddQueryParameter("language", "fr-FR");
+            return await _client.GetAsync<TmdbSearchResponse>(request);
+        }
 
-            // Envoi
-            var response = await _client.GetAsync(request);
+        // --- NOUVELLE FONCTION POUR LES DÉTAILS ---
+        public async Task<MovieDetails?> GetMovieDetails(int movieId)
+        {
+            // On demande le film par son ID
+            // On ajoute "videos" et "credits" (équipe) dans la demande
+            var request = new RestRequest($"movie/{movieId}");
+            
+            request.AddHeader("Authorization", "Bearer " + _token);
+            request.AddQueryParameter("language", "fr-FR");
+            request.AddQueryParameter("append_to_response", "videos,credits"); // La magie est ici
 
-            if (response.IsSuccessful)
-            {
-                return response.Content; // On retourne le texte brut pour l'instant
-            }
-            else
-            {
-                return "Erreur : " + response.ErrorMessage;
-            }
+            return await _client.GetAsync<MovieDetails>(request);
         }
     }
 }
