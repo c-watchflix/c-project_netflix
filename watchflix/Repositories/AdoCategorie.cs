@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using watchflix.Models;
 
 namespace watchflix.Repositories; 
-    public class AdoCatégories : Ado
+    public class AdoCategorie : Ado
     {
         public static void CreateCategorie(Categorie uneCategorie)
         {
@@ -22,37 +22,60 @@ namespace watchflix.Repositories;
             close();
         }
 
-        public static void getAll()
+        public static List<Categorie> getAll()
         {
+            List<Models.Categorie> categories = new List<Models.Categorie>();
             open();
-            SqlCommand cmd = new SqlCommand();
-            cmd.Connection = connexion;
-            cmd.CommandText = "SELECT * FROM categorie";
-            cmd.ExecuteNonQuery();
+            string query = $"SELECT * FROM Categorie";
+            SqlCommand cmd = new SqlCommand(query, connexion);
+
+            SqlDataReader reader = cmd.ExecuteReader();
+
+            while (reader.Read())
+            {
+                categories.Add(new Categorie(reader.GetInt32(0), reader.GetString(1)));
+            }
+
             close();
+            return categories;
+
         }
-        public static void getOneByID(int id_categorie)
+        public static List<Categorie> getOneByID(int id_categorie)
         {
+            List<Models.Categorie> categories = new List<Models.Categorie>();
             open();
-             SqlCommand cmd = new SqlCommand();
-            cmd.Connection = connexion;
-            cmd.CommandText = "SELECT * FROM categorie WHERE @id_categorie=id_categorie";
+            string query = "SELECT * FROM categorie WHERE @id_categorie=id_categorie";
+            SqlCommand cmd = new SqlCommand(query, connexion);
             cmd.Parameters.AddWithValue("@id_categorie", id_categorie);
-            cmd.ExecuteNonQuery();
-            close();
-        }
+            SqlDataReader reader = cmd.ExecuteReader();
 
-        public static void getOneByName(Categorie uneCategorie)
+            while (reader.Read())
+            {
+                categories.Add(new Categorie(reader.GetInt32(0), reader.GetString(1)));
+            }
+
+            close();
+            return categories;
+
+        }
+        public static List<Categorie> getOneByLibelle(string Libelle)
         {
+            List<Models.Categorie> categories = new List<Models.Categorie>();
             open();
-            SqlCommand cmd = new SqlCommand();
-            cmd.Connection = connexion;
-            cmd.CommandText = "SELECT * FROM categorie WHERE @nom_categorie=nom_categorie";
-            cmd.Parameters.AddWithValue("@nom_categorie", uneCategorie.Libelle);
-            cmd.ExecuteNonQuery();
-            close();
-        }
+            string query = "SELECT * FROM categorie WHERE libelle LIKE '%' + @libelle + '%'";
+            SqlCommand cmd = new SqlCommand(query, connexion);
+            cmd.Parameters.AddWithValue("@libelle", Libelle);
+            SqlDataReader reader = cmd.ExecuteReader();
 
+            while (reader.Read())
+            {
+                categories.Add(new Categorie(reader.GetInt32(0), reader.GetString(1)));
+            }
+
+            close();
+            return categories;
+
+        }
         public static void updateCategorie(Categorie uneCategorie, int id_categorie)
         {
             open();

@@ -9,7 +9,7 @@ builder.Services.AddRazorComponents()
 
 builder.Services.AddScoped<AdoFilm>();
 builder.Services.AddScoped<AdoArtiste>();
-builder.Services.AddScoped<AdoCatégories>();
+builder.Services.AddScoped<AdoCategorie>();
 builder.Services.AddScoped<AdoUser>();
 builder.Services.AddScoped<AdoMusique>();
 
