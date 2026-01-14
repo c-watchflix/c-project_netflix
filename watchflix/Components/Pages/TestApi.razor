@@ -1,0 +1,35 @@
+@page "/test-api"
+@rendermode InteractiveServer
+@using watchflix.Services
+@inject TmdbService TmdbService
+
+<h3>Test de l'API TMDB</h3>
+
+<div style="margin-bottom: 20px;">
+    <label>Nom du film : </label>
+    <input @bind="nomDuFilm" placeholder="Ex: Titanic" />
+    <button @onclick="ChercherFilm">Rechercher</button>
+</div>
+
+@if (!string.IsNullOrEmpty(resultatApi))
+{
+    <div style="background-color: #f0f0f0; padding: 15px; border-radius: 5px;">
+        <h4>Résultat brut de l'API :</h4>
+        <pre>@resultatApi</pre>
+    </div>
+}
+
+@code {
+    private string nomDuFilm = "";
+    private string resultatApi = "";
+
+    private async Task ChercherFilm()
+    {
+        if (!string.IsNullOrWhiteSpace(nomDuFilm))
+        {
+            resultatApi = "Recherche en cours...";
+            // C'est ici qu'on appelle votre service !
+            resultatApi = await TmdbService.SearchMovieByName(nomDuFilm);
+        }
+    }
+}
