@@ -1,79 +1,78 @@
-@page "/test-adomusique"
+@page "/test-musique"
+@attribute [StreamRendering]
+@rendermode InteractiveServer
+@using watchflix.Models
 @using watchflix.Repositories
+@using Microsoft.AspNetCore.Components
+@inject AdoMusique Repo
 
-<h3>Test AdoMusique</h3>
+<PageTitle>Musiques</PageTitle>
 
-<div>
-    <button @onclick="GetAllMusique">Récupérer toutes les musiques</button>
-    <button @onclick="GetOneById">Récupérer une musique par ID</button>
-    <button @onclick="GetOneByName">Récupérer une musique par nom</button>
-    <button @onclick="DeleteMusique">Supprimer une musique</button>
-</div>
+<h1>Ici test musiques !</h1>
 
-<h4>Résultats :</h4>
-@if (!string.IsNullOrEmpty(message))
+<button class="btn btn-primary" @onclick="GetAll">select all</button>
+<button class="btn btn-primary" @onclick="GetOneById">select 1 by ID</button>
+<button class="btn btn-primary" @onclick="GetOneByName">select 1 by name</button>
+<button class="btn btn-primary" @onclick="Delete">delete 1</button>
+
+
+@if (data != null)
 {
-    <p>@message</p>
+    <h1>Toutes les musiques</h1>
+    <ul>
+        @foreach (var musique in data)
+        {
+            <li>@musique.Titre</li>
+        }
+    </ul>
 }
-else
+
+@if (oneByID != null)
 {
-    <p>Aucune action effectuée.</p>
+    <h1>Selection d'une musique</h1>
+    <ul>
+        @foreach (var musique in oneByID)
+        {
+            <li>@musique.Titre</li>
+        }
+    </ul>
+}
+
+@if (oneByName != null)
+{
+    <h1>recherche d'une musique "hello"</h1>
+    <ul>
+        @foreach (var musique in oneByName)
+        {
+            <li>@musique.Titre</li>
+        }
+    </ul>
 }
 
 @code {
-    private string message = string.Empty;
-
-    private void GetAllMusique()
+    IEnumerable<Musique>? data;
+    IEnumerable<Musique>? oneByID;
+    IEnumerable<Musique>? oneByName;
+    private void GetAll()
     {
-        Console.WriteLine("Méthode GetAllMusique appelée.");
-        try
-        {
-            AdoMusique.GetAllMusique();
-            message = "Toutes les musiques ont été récupérées.";
-        }
-        catch (Exception ex)
-        {
-            message = $"Erreur : {ex.Message}";
-        }
+        data = AdoMusique.GetAll();
     }
 
     private void GetOneById()
     {
-        try
-        {
-            AdoMusique.GetOneById(1);
-            message = "Musique avec ID 1 récupérée.";
-        }
-        catch (Exception ex)
-        {
-            message = $"Erreur : {ex.Message}";
-        }
+        var musique = AdoMusique.GetOneById(1);
+        oneByID = new List<Musique> { musique };
     }
 
     private void GetOneByName()
     {
-        try
-        {
-            AdoMusique.GetOneByName("Chanson 1");
-            message = "Musique avec le nom 'Chanson 1' récupérée.";
-        }
-        catch (Exception ex)
-        {
-            message = $"Erreur : {ex.Message}";
-        }
+        var musique = new Musique(0, "hello");
+        AdoMusique.GetOneByName(musique);
+        oneByName = new List<Musique> { musique };
     }
 
-    private void DeleteMusique()
+    private void Delete()
     {
-        try
-        {
-            AdoMusique.DeleteMusique(1);
-            message = "Musique avec ID 1 supprimée.";
-        }
-        catch (Exception ex)
-        {
-            message = $"Erreur : {ex.Message}";
-        }
+        AdoMusique.Delete(3);
     }
 }
-

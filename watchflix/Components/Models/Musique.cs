@@ -11,9 +11,9 @@ namespace watchflix.Models
         // Attributs
         private int id;
         private string titre;
-        private TimeSpan duree;
-        private string album;
-        private string couverture;
+        private TimeSpan? duree;
+        private string? album;
+        private string? couverture;
 
         // Constructeurs
         public Musique(int Id, string Titre, TimeSpan Duree, string Album, string Couverture)
@@ -34,10 +34,16 @@ namespace watchflix.Models
             this.Couverture = Couverture;
         }
 
+        public Musique(int id, string titre)
+        {
+            this.id = id;
+            this.titre = titre;
+        }
+
         // Accesseurs
         public int Id { get => id; }
         public string Titre { get => titre; set => titre = value; }
-        public TimeSpan Duree { get => duree; set => duree = value; }
+        public TimeSpan? Duree { get => duree; set => duree = value; }
         public string Album { get => album; set => album = value; }
         public string Couverture { get => couverture; set => couverture = value; }
     }
