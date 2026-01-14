@@ -1,0 +1,78 @@
+@page "/test-musique"
+@attribute [StreamRendering]
+@rendermode InteractiveServer
+@using watchflix.Models
+@using watchflix.Repositories
+@using Microsoft.AspNetCore.Components
+@inject AdoMusique Repo
+
+<PageTitle>Musiques</PageTitle>
+
+<h1>Ici test musiques !</h1>
+
+<button class="btn btn-primary" @onclick="GetAll">select all</button>
+<button class="btn btn-primary" @onclick="GetOneById">select 1 by ID</button>
+<button class="btn btn-primary" @onclick="GetOneByName">select 1 by name</button>
+<button class="btn btn-primary" @onclick="Delete">delete 1</button>
+
+
+@if (data != null)
+{
+    <h1>Toutes les musiques</h1>
+    <ul>
+        @foreach (var musique in data)
+        {
+            <li>@musique.Titre</li>
+        }
+    </ul>
+}
+
+@if (oneByID != null)
+{
+    <h1>Selection d'une musique</h1>
+    <ul>
+        @foreach (var musique in oneByID)
+        {
+            <li>@musique.Titre</li>
+        }
+    </ul>
+}
+
+@if (oneByName != null)
+{
+    <h1>recherche d'une musique "hello"</h1>
+    <ul>
+        @foreach (var musique in oneByName)
+        {
+            <li>@musique.Titre</li>
+        }
+    </ul>
+}
+
+@code {
+    IEnumerable<Musique>? data;
+    IEnumerable<Musique>? oneByID;
+    IEnumerable<Musique>? oneByName;
+    private void GetAll()
+    {
+        data = AdoMusique.GetAll();
+    }
+
+    private void GetOneById()
+    {
+        var musique = AdoMusique.GetOneById(1);
+        oneByID = new List<Musique> { musique };
+    }
+
+    private void GetOneByName()
+    {
+        var musique = new Musique(0, "hello");
+        AdoMusique.GetOneByName(musique);
+        oneByName = new List<Musique> { musique };
+    }
+
+    private void Delete()
+    {
+        AdoMusique.Delete(3);
+    }
+}
