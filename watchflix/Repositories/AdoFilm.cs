@@ -106,6 +106,9 @@ namespace watchflix.Repositories
             cmd.Parameters.Clear();
             cmd.Parameters.AddWithValue("@Id_film", Id_film);
             cmd.ExecuteNonQuery();
+            
+            close();
+
         }
 
         public static void addMusicToFilm(int Id_film, int Id_musique)
