@@ -9,13 +9,13 @@ namespace watchflix.Models
     public class User
     {
         //attributs
-        private int id;
-        private string nom;
-        private string prenom;
-        private string courriel;
-        private string pseudo;
-        private string mdp;
-        private bool is_admin;
+        public int id;
+        public string nom;
+        public string prenom;
+        public string courriel;
+        public string pseudo;
+        public string mdp;
+        public bool? is_admin;
 
 
         //controller
@@ -31,7 +31,7 @@ namespace watchflix.Models
         }
         public User(string Nom, string Prenom, string Courriel, string Pseudo, string Mdp, bool Is_admin)
         {
-            this.id = 0;
+            // this.id = 0;
             this.Nom = Nom;
             this.Prenom = Prenom;
             this.Courriel = Courriel;
@@ -48,6 +48,6 @@ namespace watchflix.Models
         public string Courriel { get =>courriel; set => courriel = value;}
         public string Pseudo { get =>pseudo; set => pseudo = value;}
         public string Mdp { get =>mdp; set => mdp = value;}
-        public bool Is_admin { get =>is_admin; set => is_admin = value;}
+        public bool? Is_admin { get =>is_admin; set => is_admin = value;}
     }
 }
