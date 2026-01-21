@@ -123,8 +123,9 @@ namespace watchflix.Repositories
             close();
         }
 
-        // --- 3. ÉCRITURE DANS LA BDD (CORRIGÉE) ---
-        public static async Task AjouterFilmDepuisApi(MovieDetails filmApi)
+        // --- 3. ÉCRITURE DANS LA BDD ---
+        // Remarquez le "Task<bool>" au lieu de "Task"
+        public static async Task<bool> AjouterFilmDepuisApi(MovieDetails filmApi)
         {
             try 
             {
@@ -137,9 +138,13 @@ namespace watchflix.Repositories
                 
                 int count = (int)(await cmdCheck.ExecuteScalarAsync() ?? 0);
                 
-                if (count > 0) { close(); return; }
+                if (count > 0) 
+                { 
+                    close(); 
+                    return false; // <--- LE FILM EXISTE DÉJÀ : ON RETOURNE FAUX
+                }
 
-                // B. Insertion Film (CORRIGÉ : date_sortie et synopsys)
+                // B. Insertion Film
                 string queryInsert = @"
                     INSERT INTO Film (titre_film, duree_film, date_sortie, pegi, jacquette, synopsys, bande_annonce, realisateur, fond)
                     OUTPUT INSERTED.id_film 
@@ -194,6 +199,8 @@ namespace watchflix.Repositories
                     cmdLien.Parameters.AddWithValue("@IdCat", idCategorie);
                     await cmdLien.ExecuteNonQueryAsync();
                 }
+
+                return true; // <--- TOUT EST OK : ON RETOURNE VRAI
             }
             finally
             {
