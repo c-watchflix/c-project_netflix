@@ -45,15 +45,46 @@ namespace watchflix.Repositories
             return user;
         }
 
-        public static void getOne(int Id)
+        public static List<User> getOneById(int Id)
         {
+            List<User> user = new List <User>();
             open();
             SqlCommand cmd = new SqlCommand();
             cmd.Connection = connexion;
             cmd.CommandText = "SELECT * FROM Utilisateur WHERE id_utilisateur = @Id";
             cmd.Parameters.AddWithValue("@Id", Id);
             cmd.ExecuteNonQuery();
+
+            SqlDataReader reader = cmd.ExecuteReader();
+
+            while (reader.Read())
+            {
+                user.Add(new User(reader.GetInt32(0), reader.GetString(1), reader.GetString(2), reader.GetString(3), reader.GetString(4), reader.GetString(5), reader.GetBoolean(6)));
+            }
+
             close();
+            return user;           
+        }
+
+        public static List<User> getOneByName(string Nom)
+        {
+            List<User> users = new List<User>();
+            open();
+            SqlCommand cmd = new SqlCommand();
+            cmd.Connection = connexion;
+            cmd.CommandText = "SELECT * FROM Utilisateur WHERE nom LIKE '%' + @Nom + '%'";
+            cmd.Parameters.AddWithValue("@Nom", Nom);
+            cmd.ExecuteNonQuery();
+
+            SqlDataReader reader = cmd.ExecuteReader();
+
+            while (reader.Read())
+            {
+                users.Add(new User(reader.GetInt32(0), reader.GetString(1), reader.GetString(2), reader.GetString(3), reader.GetString(4), reader.GetString(5), reader.GetBoolean(6)));
+            }
+
+            close();
+            return users;
         }
 
         public static void update(User user)
@@ -73,13 +104,13 @@ namespace watchflix.Repositories
             close();
         }
 
-        public static void delete(User user)
+        public static void delete(int id)
         {
             open();
             SqlCommand cmd = new SqlCommand();
             cmd.Connection = connexion;
-            cmd.CommandText = "DELETE FROM user WHERE id_utilisateur = @Id";
-            cmd.Parameters.AddWithValue("@Id", user.Id);
+            cmd.CommandText = "DELETE FROM utilisateur WHERE id_utilisateur = @Id";
+            cmd.Parameters.AddWithValue("@Id", id);
             cmd.ExecuteNonQuery();
             close();
 

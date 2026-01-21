@@ -1,0 +1,60 @@
+@page "/user.create"
+@rendermode InteractiveServer
+@using watchflix.Models
+@using watchflix.Repositories
+@inject AdoUser Repo
+@inject NavigationManager Navigation
+
+<PageTitle>User Create</PageTitle>
+
+<h5>Création d'un utilisateur</h5>
+
+<form>
+    <div class="mb-3">
+        <label class="form-label">Nom</label>
+        <input class="form-control" @bind="newUser.Nom" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Prénom</label>
+        <input class="form-control" @bind="newUser.Prenom" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Email</label>
+        <input type="email" class="form-control" @bind="newUser.Courriel" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Pseudo</label>
+        <input class="form-control" @bind="newUser.Pseudo" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Mot de passe</label>
+        <input type="password" class="form-control" @bind="newUser.Mdp" />
+    </div>
+
+    <div class="mb-3 form-check">
+        <input type="checkbox" class="form-check-input" @bind="newUser.Is_admin" />
+        <label class="form-check-label">Admin</label>
+    </div>
+
+    <button type="button" class="btn btn-primary" @onclick="create">
+        Envoyer
+    </button>
+</form>
+
+
+@code {
+
+    private User newUser = new User(
+      "", "", "", "", "", false
+    );
+    private void create()
+    {
+        AdoUser.create(newUser);
+        Navigation.NavigateTo("/user");
+    }
+
+}
