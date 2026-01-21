@@ -1,0 +1,65 @@
+@page "/test-artiste"
+@rendermode InteractiveServer
+@using watchflix.Models
+@using watchflix.Repositories
+@using Microsoft.AspNetCore.Components
+@inject AdoArtiste Repo
+
+<PageTitle>Artistes</PageTitle>
+
+<h1>Ici test artistes !</h1>
+
+<button class="btn btn-primary" @onclick="GetAll">Afficher tous les artistes</button>
+<button class="btn btn-primary" @onclick="GetOneById">Afficher un artiste par ID</button>
+<button class="btn btn-primary" @onclick="GetOneByName">Afficher un artiste par nom</button>
+<button class="btn btn-primary" @onclick="Delete">Supprimer un artiste</button>
+
+@if (data != null && data.Any())
+{
+    <h1>Liste des artistes</h1>
+    <ul>
+        @foreach (var artiste in data)
+        {
+            <li>@artiste.Nom</li>
+        }
+    </ul>
+}
+
+@if (oneByID != null)
+{
+    <h1>Artiste sélectionné par ID</h1>
+    <p>@oneByID.Nom</p>
+}
+
+@if (oneByName != null)
+{
+    <h1>Artiste recherché par nom</h1>
+    <p>@oneByName.Nom</p>
+}
+
+@code {
+    IEnumerable<Artiste>? data;
+    Artiste? oneByID;
+    Artiste? oneByName;
+
+    private void GetAll()
+    {
+        data = AdoArtiste.GetAllArtistes();
+    }
+
+    private void GetOneById()
+    {
+        oneByID = AdoArtiste.GetOneById(3);
+    }
+
+    private void GetOneByName()
+    {
+        oneByName = AdoArtiste.GetOneByName("Adèle");
+    }
+
+    private void Delete()
+    {
+        AdoArtiste.DeleteArtiste(3);
+        data = AdoArtiste.GetAllArtistes();
+    }
+}

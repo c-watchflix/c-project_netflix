@@ -1,51 +1,84 @@
 using System;
-using Microsoft.Data.SqlClient;   
+using Microsoft.Data.SqlClient;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 namespace watchflix.Repositories;
+using watchflix.Models;
 
 public class AdoArtiste : Ado
 {
-    public static void GetAllArtistes()
+    public static List<Artiste> GetAllArtistes()
     {
+        List<Artiste> artistes = new List<Artiste>();
         open();
-        SqlCommand cmd = new SqlCommand();
-        cmd.Connection = connexion;
-        cmd.CommandText = "SELECT * FROM Artiste";
-        cmd.ExecuteNonQuery();
+        string query = "SELECT id_artiste, nom_artiste FROM Artiste";
+        SqlCommand cmd = new SqlCommand(query, connexion);
+
+        SqlDataReader reader = cmd.ExecuteReader();
+
+        while (reader.Read())
+        {
+            artistes.Add(new Artiste(reader.GetInt32(0), reader.GetString(1)));
+        }
+
         close();
+        return artistes;
     }
 
-    public static void GetOneById(int id_artiste)
+    public static Artiste? GetOneById(int id_artiste)
     {
         open();
-        SqlCommand cmd = new SqlCommand();
-        cmd.Connection = connexion;
-        cmd.CommandText = "SELECT * FROM Artiste WHERE id_artiste = @id_artiste";
+        string query = "SELECT id_artiste, nom_artiste FROM Artiste WHERE id_artiste = @id_artiste";
+        SqlCommand cmd = new SqlCommand(query, connexion);
         cmd.Parameters.AddWithValue("@id_artiste", id_artiste);
-        cmd.ExecuteNonQuery();
+
+        SqlDataReader reader = cmd.ExecuteReader();
+        Artiste? artiste = null;
+
+        if (reader.Read())
+        {
+            artiste = new Artiste(reader.GetInt32(0), reader.GetString(1));
+        }
+
         close();
+        return artiste;
     }
-    public static void GetOneByName(string nom_artiste)
+
+    public static Artiste? GetOneByName(string nom_artiste)
     {
         open();
-        SqlCommand cmd = new SqlCommand();
-        cmd.Connection = connexion;
-        cmd.CommandText = "SELECT * FROM Artiste WHERE nom_artiste = @nom_artiste";
+        string query = "SELECT id_artiste, nom_artiste FROM Artiste WHERE nom_artiste = @nom_artiste";
+        SqlCommand cmd = new SqlCommand(query, connexion);
         cmd.Parameters.AddWithValue("@nom_artiste", nom_artiste);
-        cmd.ExecuteNonQuery();
+
+        SqlDataReader reader = cmd.ExecuteReader();
+        Artiste? artiste = null;
+
+        if (reader.Read())
+        {
+            artiste = new Artiste(reader.GetInt32(0), reader.GetString(1));
+        }
+
         close();
+        return artiste;
     }
+
     public static void DeleteArtiste(int id_artiste)
     {
         open();
-        SqlCommand cmd = new SqlCommand();
-        cmd.Connection = connexion;
-        cmd.CommandText = "DELETE FROM Artiste WHERE id_artiste = @id_artiste";
-        cmd.Parameters.AddWithValue("@id_artiste", id_artiste);
-        cmd.ExecuteNonQuery();
+
+        // Supprimer les relations dans artiste_musique
+        string deleteArtisteMusiqueQuery = "DELETE FROM artiste_musique WHERE id_artiste = @id_artiste";
+        SqlCommand cmdArtisteMusique = new SqlCommand(deleteArtisteMusiqueQuery, connexion);
+        cmdArtisteMusique.Parameters.AddWithValue("@id_artiste", id_artiste);
+        cmdArtisteMusique.ExecuteNonQuery();
+
+        // Supprimer l'artiste
+        string deleteArtisteQuery = "DELETE FROM Artiste WHERE id_artiste = @id_artiste";
+        SqlCommand cmdArtiste = new SqlCommand(deleteArtisteQuery, connexion);
+        cmdArtiste.Parameters.AddWithValue("@id_artiste", id_artiste);
+        cmdArtiste.ExecuteNonQuery();
+
         close();
     }
-
-    
 }
