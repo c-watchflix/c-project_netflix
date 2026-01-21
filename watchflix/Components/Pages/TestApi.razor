@@ -2,9 +2,12 @@
 @rendermode InteractiveServer
 @using watchflix.Services
 @using watchflix.Models
+@using watchflix.Repositories
 @inject TmdbService TmdbService
+@inject AdoFilm AdoFilmService 
+@* J'ai renommé l'injection en AdoFilmService pour éviter la confusion avec la classe AdoFilm *@
 
-<h3>🎬 Test Complet TMDB</h3>
+<h3>🎬 Test Complet TMDB & Ajout BDD</h3>
 
 <div style="margin-bottom: 20px; display:flex; gap:10px;">
     <input @bind="nomDuFilm" class="form-control" placeholder="Nom du film..." />
@@ -17,7 +20,8 @@
         @foreach (var film in resultats.Results)
         {
             <div style="border:1px solid #ddd; width: 150px; text-align:center; cursor:pointer;" 
-                 @onclick="() => VoirDetails(film.Id)"> <img src="@film.FullImageUrl" style="width:100%;" />
+                 @onclick="() => VoirDetails(film.Id)">
+                <img src="@film.FullImageUrl" style="width:100%;" />
                 <p><strong>@film.Title</strong></p>
                 <button class="btn btn-sm btn-info">Voir fiche complète</button>
             </div>
@@ -27,37 +31,44 @@
 
 @if (filmSelectionne != null)
 {
-    <button class="btn btn-secondary" @onclick="RetourListe">⬅ Retour à la liste</button>
-    <hr />
+    <button class="btn btn-secondary mb-3" @onclick="RetourListe">⬅ Retour à la liste</button>
 
-    <div style="background-image: url('@filmSelectionne.FullBackdropUrl'); background-size: cover; color: white; padding: 50px; border-radius: 15px; position: relative;">
-        
-        <div style="background-color: rgba(0,0,0,0.8); padding: 30px; border-radius: 10px; display: flex; gap: 30px;">
-            
-            <img src="@filmSelectionne.FullPosterUrl" style="width: 200px; border-radius: 10px;" />
-
-            <div>
-                <h1>@filmSelectionne.Title (@filmSelectionne.AnneeSortie)</h1>
-                <p><strong>⏱ Durée :</strong> @filmSelectionne.Runtime min</p>
-                <p><strong>🎬 Réalisateur :</strong> @(filmSelectionne.Realisateur ?? "Inconnu")</p>
-                
-                <h4>Résumé</h4>
-                <p>@filmSelectionne.Overview</p>
-
-                @if (!string.IsNullOrEmpty(filmSelectionne.YoutubeKey))
-                {
-                    <div style="margin-top: 20px;">
-                        <h4>Bande Annonce</h4>
-                        <iframe width="560" height="315" 
-                                src="https://www.youtube.com/embed/@filmSelectionne.YoutubeKey" 
-                                frameborder="0" allowfullscreen>
-                        </iframe>
+    <div class="card mb-3">
+        <div class="row g-0">
+            <div class="col-md-3">
+                <img src="@filmSelectionne.FullPosterUrl" class="img-fluid rounded-start" style="width:100%;">
+            </div>
+            <div class="col-md-9">
+                <div class="card-body">
+                    <h2 class="card-title">@filmSelectionne.Title</h2>
+                    
+                    <div class="my-3">
+                        @if (messageAjout == "")
+                        {
+                            <button class="btn btn-success btn-lg" @onclick="AjouterALaBdd">
+                                ➕ Ajouter à ma Vidéothèque
+                            </button>
+                        }
+                        else
+                        {
+                            <div class="alert alert-success">@messageAjout</div>
+                        }
                     </div>
-                }
-                else
-                {
-                    <p style="color:orange;">Pas de bande annonce disponible.</p>
-                }
+
+                    <p><strong>Année :</strong> @filmSelectionne.AnneeSortie</p>
+                    <p><strong>PEGI :</strong> @filmSelectionne.Pegi</p>
+                    <p>@filmSelectionne.Overview</p>
+                    
+                    @if (!string.IsNullOrEmpty(filmSelectionne.YoutubeKey))
+                    {
+                         <div style="margin-top: 20px;">
+                            <iframe width="400" height="225" 
+                                    src="https://www.youtube.com/embed/@filmSelectionne.YoutubeKey" 
+                                    frameborder="0" allowfullscreen>
+                            </iframe>
+                        </div>
+                    }
+                </div>
             </div>
         </div>
     </div>
@@ -66,22 +77,36 @@
 @code {
     private string nomDuFilm = "";
     private TmdbSearchResponse? resultats;
-    private MovieDetails? filmSelectionne; // Stocke le film complet
+    private MovieDetails? filmSelectionne; // C'est cette variable qui manquait !
+    private string messageAjout = "";
 
     private async Task ChercherFilm()
     {
-        filmSelectionne = null; // On cache la fiche détail
+        filmSelectionne = null;
+        messageAjout = "";
         resultats = await TmdbService.SearchMovieByName(nomDuFilm);
     }
 
     private async Task VoirDetails(int id)
     {
-        // On appelle la nouvelle fonction qui récupère tout (Youtube, Réalisateur, etc.)
         filmSelectionne = await TmdbService.GetMovieDetails(id);
+    }
+
+    private async Task AjouterALaBdd()
+    {
+        if (filmSelectionne != null)
+        {
+            // On appelle le service réparé
+            await AdoFilm.AjouterFilmDepuisApi(filmSelectionne);
+            
+            messageAjout = "Film ajouté avec succès ! Vérifiez votre page Vidéothèque.";
+            StateHasChanged(); 
+        }
     }
 
     private void RetourListe()
     {
-        filmSelectionne = null; // On vide la sélection pour réafficher la liste
+        filmSelectionne = null;
+        messageAjout = "";
     }
 }

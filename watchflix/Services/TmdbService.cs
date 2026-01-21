@@ -35,7 +35,7 @@ namespace watchflix.Services
             
             request.AddHeader("Authorization", "Bearer " + _token);
             request.AddQueryParameter("language", "fr-FR");
-            request.AddQueryParameter("append_to_response", "videos,credits"); // La magie est ici
+            request.AddQueryParameter("append_to_response", "videos,credits,release_dates");
 
             return await _client.GetAsync<MovieDetails>(request);
         }
