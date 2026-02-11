@@ -26,29 +26,33 @@
     }
 
     /* --- 2. LAYOUT RESPONSIVE & CENTRAGE --- */
+    /* Utilisation de grid pour un centrage parfait et une gestion simplifiée */
     @@media (min-width: 992px) {
         body { overflow: hidden; } /* Bloque le scroll navigateur sur PC */
         .layout-wrapper {
             height: 100vh;
             width: 100vw;
-            display: flex;
-            align-items: center; /* Centre verticalement */
-            justify-content: center; /* Centre horizontalement */
+            display: grid; /* Grid est souvent plus robuste pour le centrage */
+            place-items: center; /* Centre verticalement et horizontalement */
             padding: 20px;
+            box-sizing: border-box; /* Important pour que le padding ne s'ajoute pas à la largeur */
         }
         .glass-container {
-            height: 80vh; /* Hauteur fixe un peu réduite pour le centrage */
+            height: 80vh; /* Hauteur fixe */
             width: 100%;
             max-width: 1500px;
-            overflow-y: auto; /* Le scroll est interne au panneau */
+            overflow-y: auto; /* Scroll interne */
             scrollbar-width: none;
+            /* Flexibilité interne pour le contenu */
+            display: flex; 
+            flex-direction: column;
         }
         .glass-container::-webkit-scrollbar { display: none; }
     }
 
     @@media (max-width: 991px) {
-        .layout-wrapper { padding: 20px 10px; height: auto; }
-        .glass-container { height: auto; overflow: visible; }
+        .layout-wrapper { padding: 20px 10px; height: auto; display: block;}
+        .glass-container { height: auto; overflow: visible; display: block;}
     }
 
     /* --- 3. DESIGN VERRE --- */
@@ -114,58 +118,62 @@
         background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1);
         display: flex; align-items: center; justify-content: center;
         font-size: 1.4rem; color: #ff6b6b; cursor: pointer; transition: 0.3s; margin-left: 15px;
-        z-index: 100; /* Z-Index élevé pour passer au dessus */
+        z-index: 100;
     }
     .btn-heart:hover { background: rgba(255, 107, 107, 0.2); transform: scale(1.1); }
     
     .floating-heart {
         position: absolute; color: #ff6b6b; font-size: 1.2rem;
+        /* Animation ajustée pour être visible même avec overflow: hidden sur le parent si possible, 
+           sinon on compte sur le z-index élevé */
         animation: floatUp 1s ease-out forwards; opacity: 0; pointer-events: none;
-        z-index: 101; 
+        z-index: 1000; /* Très haut pour passer au-dessus de tout */
     }
-    /* Animation ajustée pour ne pas sortir du cadre (fade out avant) */
     @@keyframes floatUp {
         0% { transform: translateY(0) scale(1); opacity: 1; }
         70% { opacity: 1; }
         100% { transform: translateY(-40px) scale(1.5); opacity: 0; }
     }
 
-    /* --- 7. TOAST NOTIFICATION STYLE GLPi (VERRE + BARRE) --- */
+    /* --- 7. TOAST NOTIFICATION (RETOUR AU STYLE PILULE VERRE) --- */
     .toast-container {
         position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
-        /* Fond verre flouté */
-        background: rgba(40, 40, 40, 0.7); 
-        backdrop-filter: blur(15px);
-        -webkit-backdrop-filter: blur(15px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        /* Style Verre Pilule */
+        background: rgba(30, 30, 30, 0.75); /* Un peu plus opaque pour la lisibilité */
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 12px; /* Coins un peu moins ronds pour la barre en bas */
         
-        padding: 0; /* Padding géré par le contenu */
-        border-radius: 12px;
-        box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         display: flex; flex-direction: column;
-        z-index: 20000; overflow: hidden;
+        z-index: 20000; overflow: hidden; /* Important pour couper la barre en bas */
         animation: slideUp 0.3s ease-out;
         min-width: 350px;
     }
+    
     .toast-content {
         display: flex; align-items: center; gap: 15px; 
-        padding: 15px 25px; /* Espace autour du texte */
+        padding: 15px 25px; /* Padding confortable */
         width: 100%;
     }
+    
     .toast-error .toast-icon { color: #ff6b6b; }
     .toast-success .toast-icon { color: #2ecc71; }
     .toast-text { color: white; font-weight: 500; font-size: 1rem; }
     
-    /* Barre de progression */
+    /* Barre de progression en bas */
     .progress-bar {
         height: 4px; width: 100%; background: rgba(255,255,255,0.1);
+        margin-top: 0; /* Pas de marge négative nécessaire si structuré en flex column */
     }
     .progress-fill {
         height: 100%; width: 100%;
-        animation: progress 3s linear forwards; /* Durée = temps d'affichage */
+        /* Animation qui réduit la largeur de 100% à 0% */
+        animation: progress 3s linear forwards;
     }
-    .toast-success .progress-fill { background: #2ecc71; } /* Vert */
-    .toast-error .progress-fill { background: #ff6b6b; } /* Rouge */
+    .toast-success .progress-fill { background: #2ecc71; box-shadow: 0 0 10px #2ecc71; } 
+    .toast-error .progress-fill { background: #ff6b6b; box-shadow: 0 0 10px #ff6b6b; }
 
     @@keyframes slideUp { from { transform: translate(-50%, 50px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
     @@keyframes progress { from { width: 100%; } to { width: 0%; } }
