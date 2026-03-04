@@ -406,7 +406,7 @@ else { <div class="movie-background" style="background-image: url('@filmSelectio
     {
         if (filmSelectionne != null)
         {
-            bool succes = await AdoFilm.AjouterFilmDepuisApi(filmSelectionne);
+            bool succes = await AdoFilm.addFilmWhithApi(filmSelectionne);
             if (succes) AfficherNotification("Film ajouté à votre vidéothèque !", "success");
             else AfficherNotification("Ce film est déjà dans votre collection !", "error");
         }

@@ -22,17 +22,17 @@ namespace watchflix.Repositories
             while (reader.Read())
             {
                 films.Add(new Film(
-                    reader.GetInt32(0),                                         
-                    reader.GetString(1),                                        
-                    reader.IsDBNull(2) ? "N/A" : reader.GetString(2), 
-                    // CORRECTION : On lit la date (index 3)
-                    reader.IsDBNull(3) ? "" : reader.GetDateTime(3).ToString("yyyy"), 
-                    reader.IsDBNull(4) ? "" : reader.GetString(4),              
-                    reader.IsDBNull(5) ? "" : reader.GetString(5),              
-                    reader.IsDBNull(6) ? "" : reader.GetString(6), // synopsys             
-                    reader.IsDBNull(7) ? "" : reader.GetString(7),              
-                    reader.IsDBNull(8) ? "" : reader.GetString(8),              
-                    reader.IsDBNull(9) ? "" : reader.GetString(9)               
+                    reader.GetInt32(0),  // id
+                    reader.GetString(1), // titre
+                    reader.GetString(2), // pegi
+                    reader.GetString(3), // jacquette
+                    reader.GetString(4), // synopsys
+                    reader.GetString(5), // bande_annonce
+                    reader.GetString(6), // realisateur
+                    reader.GetString(7), // fond
+                    reader.GetString(8), // fond
+                    reader.GetString(9)  // fond
+
                 ));
             }
             close();
@@ -80,23 +80,37 @@ namespace watchflix.Repositories
             SqlCommand cmd = new SqlCommand();
             cmd.Connection = connexion;
 
-            // Nettoyage tables liées
-            cmd.CommandText = "DELETE FROM film_musique WHERE id_film = @Id";
-            cmd.Parameters.AddWithValue("@Id", Id_film);
+            //casser lelien entre le film et ses musiques
+            cmd.CommandText = "DELETE FROM film_musique WHERE id_film = @Id_film";
+            cmd.Parameters.Clear(); //évite les bug silencieux
+            cmd.Parameters.AddWithValue("@Id_film", Id_film);
             cmd.ExecuteNonQuery();
 
-            cmd.CommandText = "DELETE FROM categorie_film WHERE id_film = @Id";
+            //casser lelilen entre les musiques et les artistes
+            cmd.CommandText = "DELETE am FROM artiste_musique am INNER JOIN Musique m ON m.id_musique = am.id_musique LEFT JOIN film_musique fm ON fm.id_musique = m.id_musique WHERE fm.id_musique IS NULL";
             cmd.Parameters.Clear();
-            cmd.Parameters.AddWithValue("@Id", Id_film);
             cmd.ExecuteNonQuery();
 
-            // Supp film
-            cmd.CommandText = "DELETE FROM Film WHERE id_film = @Id";
+            //supp les musiques orphelines
+            cmd.CommandText = "DELETE FROM Musique WHERE NOT EXISTS (SELECT 1 FROM film_musique film WHERE film.id_musique = Musique.id_musique)";
             cmd.Parameters.Clear();
-            cmd.Parameters.AddWithValue("@Id", Id_film);
+            cmd.ExecuteNonQuery();
+
+            //casser le lien entre le film et ses catégories
+            cmd.CommandText = "DELETE FROM categorie_film WHERE id_film = @Id_film";
+            cmd.Parameters.Clear();
+            cmd.Parameters.AddWithValue("@Id_film", Id_film);
+            cmd.ExecuteNonQuery();
+
+
+            // supp le film
+            cmd.CommandText = "DELETE FROM Film WHERE id_film = @Id_film";
+            cmd.Parameters.Clear();
+            cmd.Parameters.AddWithValue("@Id_film", Id_film);
             cmd.ExecuteNonQuery();
             
             close();
+
         }
 
         public static void addMusicToFilm(int Id_film, int Id_musique)
@@ -125,7 +139,7 @@ namespace watchflix.Repositories
 
         // --- 3. ÉCRITURE DANS LA BDD ---
         // Remarquez le "Task<bool>" au lieu de "Task"
-        public static async Task<bool> AjouterFilmDepuisApi(MovieDetails filmApi)
+        public static async Task<bool> addFilmWhithApi(MovieDetails filmApi)
         {
             try 
             {
