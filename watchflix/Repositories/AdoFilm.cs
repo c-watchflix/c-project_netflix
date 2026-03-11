@@ -29,12 +29,13 @@ namespace watchflix.Repositories
                     reader.GetString(4), // synopsys
                     reader.GetString(5), // bande_annonce
                     reader.GetString(6), // realisateur
-                    reader.GetString(7), // fond
-                    reader.GetString(8), // fond
+                    reader.GetString(7),  // fond
+                    reader.GetString(8),  // fond
                     reader.GetString(9)  // fond
 
                 ));
             }
+            //getTimeOnly ou DateOnly n'existe as, il faut faire la conversion manuellement 
             close();
             return films;
         }
@@ -49,7 +50,7 @@ namespace watchflix.Repositories
             cmd.Parameters.AddWithValue("@Id", id);
             SqlDataReader reader = cmd.ExecuteReader();
             while (reader.Read()) { 
-                film.Add(new Film { Id = reader.GetInt32(0), Titre = reader.GetString(1) }); 
+                film.Add(new Film(reader.GetInt32(0), reader.GetString(1))); 
             }
             close();
             return film;
@@ -57,7 +58,7 @@ namespace watchflix.Repositories
 
         public static List<Film> getOneByName(string titre)
         {
-            List<Film> films = new List<Film>();
+            List<Film> film = new List<Film>();
             open();
             SqlCommand cmd = new SqlCommand();
             cmd.Connection = connexion;
@@ -68,11 +69,12 @@ namespace watchflix.Repositories
 
             while (reader.Read())
             {
-                films.Add(new Film { Id = reader.GetInt32(0), Titre = reader.GetString(1) });
+                film.Add(new Film(reader.GetInt32(0), reader.GetString(1)));
             }
             close();
-            return films;
+            return film;
         }
+ 
 
         public static void delete(int Id_film)
         {
@@ -130,7 +132,7 @@ namespace watchflix.Repositories
             open();
             SqlCommand cmd = new SqlCommand();
             cmd.Connection = connexion;
-            cmd.CommandText = "INSERT INTO categorie_film VALUES (@Id_film, @Id_categorie)";
+            cmd.CommandText = "INSERT INTO film_musique VALUES (@Id_film, @Id_categorie)";
             cmd.Parameters.AddWithValue("@Id_film", Id_film);
             cmd.Parameters.AddWithValue("@Id_categorie", Id_categorie);
             cmd.ExecuteNonQuery();
