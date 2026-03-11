@@ -8,7 +8,7 @@ namespace watchflix.Repositories
 {
     internal class AdoFilm : Ado
     {
-        // --- 1. LECTURE (Corrigé avec vos noms de colonnes : date_sortie, synopsys) ---
+        // --- 1. LECTURE ---
         public static List<Film> getAll()
         {
             List<Film> films = new List<Film>();
@@ -21,6 +21,8 @@ namespace watchflix.Repositories
 
             while (reader.Read())
             {
+                // On passe les variables dans L'ORDRE EXACT du constructeur de Film.cs :
+                // Constructeur : Film(Id, Titre, Pegi, Jacquette, Resume, Bande_annonce, Realisateur, Fond, Dte_sortie, Duree)
                 films.Add(new Film(
                     reader.GetInt32(0),  // id
                     reader.GetString(1), // titre
@@ -38,6 +40,33 @@ namespace watchflix.Repositories
             //getTimeOnly ou DateOnly n'existe as, il faut faire la conversion manuellement 
             close();
             return films;
+        }
+
+        // --- NOUVELLE MÉTHODE : RÉCUPÉRER LES CATÉGORIES DE CHAQUE FILM ---
+        public static Dictionary<int, List<string>> GetCategoriesParFilm()
+        {
+            var dico = new Dictionary<int, List<string>>();
+            open();
+            
+            // On croise la table de liaison (categorie_film) avec la table Categorie
+            string query = "SELECT cf.id_film, c.libelle FROM categorie_film cf INNER JOIN Categorie c ON cf.id_categorie = c.id_categorie";
+            
+            SqlCommand cmd = new SqlCommand(query, connexion);
+            SqlDataReader reader = cmd.ExecuteReader();
+            
+            while (reader.Read())
+            {
+                int idFilm = reader.GetInt32(0);
+                string libelle = reader.GetString(1);
+                
+                if (!dico.ContainsKey(idFilm))
+                {
+                    dico[idFilm] = new List<string>();
+                }
+                dico[idFilm].Add(libelle);
+            }
+            close();
+            return dico;
         }
 
         // --- 2. ANCIENNES MÉTHODES ---
@@ -104,7 +133,6 @@ namespace watchflix.Repositories
             cmd.Parameters.AddWithValue("@Id_film", Id_film);
             cmd.ExecuteNonQuery();
 
-
             // supp le film
             cmd.CommandText = "DELETE FROM Film WHERE id_film = @Id_film";
             cmd.Parameters.Clear();
@@ -112,7 +140,6 @@ namespace watchflix.Repositories
             cmd.ExecuteNonQuery();
             
             close();
-
         }
 
         public static void addMusicToFilm(int Id_film, int Id_musique)
@@ -140,7 +167,6 @@ namespace watchflix.Repositories
         }
 
         // --- 3. ÉCRITURE DANS LA BDD ---
-        // Remarquez le "Task<bool>" au lieu de "Task"
         public static async Task<bool> addFilmWhithApi(MovieDetails filmApi)
         {
             try 

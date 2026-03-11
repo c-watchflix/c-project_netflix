@@ -1,55 +1,429 @@
 @page "/ma-videotheque"
+@rendermode InteractiveServer
 @using watchflix.Models
 @using watchflix.Repositories
 @inject NavigationManager Nav
+@inject IJSRuntime JS
 
-<h3>🎬 Ma Vidéothèque Personnelle</h3>
+<style>
+    /* --- 1. FOND DE BASE --- */
+    .default-background {
+        position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+        background-image: url('https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=2070&auto=format&fit=crop');
+        background-color: #141414;
+        background-size: cover; background-position: center;
+        z-index: -3; 
+        filter: brightness(0.3) blur(5px);
+        transform: scale(1.1);
+    }
 
-@if (mesFilms.Count == 0)
+    /* --- 2. CALQUES DE FONDS DES FILMS --- */
+    .movie-bg-overlay {
+        position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+        background-size: cover; background-position: center;
+        z-index: -2; 
+        filter: brightness(0.4) blur(15px);
+        transform: scale(1.1);
+        transition: opacity 0.6s ease-in-out;
+        pointer-events: none; 
+    }
+
+    /* --- 3. TITRE DE LA PAGE --- */
+    .page-title {
+        text-align: center;
+        color: white;
+        margin-bottom: 30px;
+        font-weight: bold;
+        text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+    }
+
+    /* --- 4. BARRE DE RECHERCHE --- */
+    .search-container {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 20px; 
+    }
+
+    .search-pill {
+        width: 100%;
+        max-width: 800px; 
+        padding: 12px 25px;
+        border-radius: 50px; 
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        background: rgba(30, 30, 30, 0.6);
+        color: white;
+        font-size: 1.1rem;
+        backdrop-filter: blur(10px); 
+        outline: none;
+        transition: 0.3s;
+        text-align: center;
+    }
+
+    .search-pill::placeholder { color: rgba(255, 255, 255, 0.6); }
+    .search-pill:focus {
+        background: rgba(40, 40, 40, 0.8);
+        border-color: rgba(255, 255, 255, 0.5);
+        box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+    }
+
+    /* --- 5. BARRE DE CATÉGORIES DYNAMIQUE --- */
+    .categories-container {
+        display: flex;
+        align-items: center;
+        max-width: 800px; 
+        margin: 0 auto 40px auto;
+        position: relative;
+    }
+
+    .btn-cat {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: white;
+        padding: 8px 20px;
+        border-radius: 50px; 
+        transition: 0.2s;
+        font-weight: 500;
+        cursor: pointer;
+        white-space: nowrap; 
+        flex-shrink: 0;
+    }
+
+    .btn-cat:hover { background: rgba(255, 255, 255, 0.25); }
+    
+    .btn-cat.active {
+        background: white;
+        color: #141414;
+        font-weight: bold;
+        box-shadow: 0 0 15px rgba(255,255,255,0.4);
+    }
+
+    .cat-separator {
+        color: rgba(255,255,255,0.3);
+        margin: 0 15px;
+        font-size: 1.5rem;
+        flex-shrink: 0;
+    }
+
+    .cat-carousel-wrapper {
+        display: flex;
+        align-items: center;
+        flex-grow: 1;
+        position: relative;
+        overflow: hidden;
+        -webkit-mask-image: linear-gradient(to right, black 85%, transparent 100%);
+        mask-image: linear-gradient(to right, black 85%, transparent 100%);
+        padding-right: 20px; 
+    }
+
+    .cat-carousel {
+        display: flex;
+        gap: 10px;
+        overflow-x: auto;
+        scrollbar-width: none; 
+        scroll-behavior: smooth;
+        width: 100%;
+        padding-right: 50px; 
+    }
+    .cat-carousel::-webkit-scrollbar { display: none; } 
+
+/* --- NOUVEAU BOUTON PILULE (Avec Transparence Glassmorphism) --- */
+    .nav-pill {
+        display: flex;
+        align-items: center;
+        /* Même fond semi-transparent que les autres boutons */
+        background: rgba(255, 255, 255, 0.1); 
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 50px; 
+        margin-left: 10px;
+        overflow: hidden; 
+        flex-shrink: 0;
+        /* Ajout de l'effet verre flouté */
+        backdrop-filter: blur(10px); 
+        -webkit-backdrop-filter: blur(10px);
+    }
+
+    .nav-btn {
+        background: transparent;
+        border: none;
+        color: white;
+        padding: 8px 18px; 
+        font-size: 1.2rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .nav-btn:hover { background: rgba(255, 255, 255, 0.2); }
+
+    .nav-separator {
+        color: rgba(255, 255, 255, 0.3);
+        font-size: 1rem;
+        user-select: none; /* Empêche de surligner le "|" en bleu par erreur */
+    }
+
+    /* --- 6. GRILLE DE FILMS --- */
+    .movie-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 30px;
+        padding: 20px;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    /* --- 7. CARTE DU FILM --- */
+    .movie-card {
+        position: relative; 
+        border-radius: 16px;
+        overflow: hidden; 
+        transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s;
+        cursor: pointer; 
+        background: #000; 
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .movie-card:hover {
+        transform: translateY(-10px) scale(1.05); 
+        box-shadow: 0 20px 40px rgba(0,0,0,0.8);
+        border-color: rgba(255, 255, 255, 0.3);
+        z-index: 10; 
+    }
+
+    .movie-poster {
+        width: 100%;
+        aspect-ratio: 2/3; 
+        object-fit: cover;
+        display: block;
+        transition: filter 0.4s ease;
+    }
+
+    .movie-card:hover .movie-poster {
+        filter: brightness(0.5); 
+    }
+
+    .movie-title-overlay {
+        position: absolute;
+        bottom: 0; left: 0; width: 100%;
+        padding: 30px 15px 20px 15px; 
+        background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.6) 50%, transparent 100%);
+        color: white;
+        font-size: 1.2rem;
+        font-weight: bold;
+        text-align: center;
+        opacity: 0;
+        transform: translateY(20px);
+        transition: all 0.4s ease-out;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .movie-card:hover .movie-title-overlay {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    /* =========================================
+       8. RESPONSIVE DESIGN
+       ========================================= */
+    @@media (max-width: 768px) {
+        .page-title { font-size: 1.5rem; margin-bottom: 20px; }
+        .search-pill { width: 90%; font-size: 1rem; padding: 10px 20px; }
+        .categories-container { width: 90%; }
+        .movie-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px; padding: 10px; }
+        .movie-title-overlay {
+            font-size: 1rem; padding: 20px 10px 15px 10px;
+            opacity: 1; transform: translateY(0);
+            background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 100%);
+        }
+        .movie-card:hover .movie-poster { filter: brightness(0.8); }
+    }
+</style>
+
+<div class="default-background"></div>
+
+@if (FilmsFiltres != null)
 {
-    <p>Aucun film dans la base de données.</p>
-    <a href="/test-api" class="btn btn-primary">Aller chercher des films</a>
+    @foreach (var film in FilmsFiltres)
+    {
+        <div class="movie-bg-overlay" 
+             style="background-image: url('@GetBackdropUrl(film.Fond)'); opacity: @(hoveredFilmId == film.Id ? 1 : 0);">
+        </div>
+    }
 }
-else
-{
-    <div style="display: flex; flex-wrap: wrap; gap: 20px;">
-        @foreach (var film in mesFilms)
-        {
-            <div class="card" style="width: 18rem;">
-                <img src="@film.Jacquette" class="card-img-top" alt="@film.Titre" 
-                     style="height: 400px; object-fit: cover;">
-                
-                <div class="card-body">
-                    <h5 class="card-title">@film.Titre</h5>
-                    <h6 class="card-subtitle mb-2 text-muted">@film.Dte_sortie - @film.Pegi</h6>
-                    <p class="card-text">@film.Duree</p>
-                    
-                    <button class="btn btn-sm btn-outline-primary">Voir fiche</button>
-                    
-                    <button class="btn btn-sm btn-danger" @onclick="() => Supprimer(film.Id)">🗑</button>
+
+<div class="layout-wrapper" style="position: relative; z-index: 1; padding-top: 20px; padding-bottom: 50px;">
+    <h3 class="page-title">🎬 Ma Vidéothèque Personnelle</h3>
+
+    @if (mesFilms == null)
+    {
+        <div class="text-center text-white mt-5"><p>Chargement des films...</p></div>
+    }
+    else if (mesFilms.Count == 0)
+    {
+        <div class="text-center text-white mt-5">
+            <p class="mb-4">Aucun film dans votre base de données.</p>
+            <a href="/test-api" class="btn-cat active" style="display:inline-block;">Aller chercher des films</a>
+        </div>
+    }
+    else
+    {
+        <div class="search-container">
+            <input type="text" class="search-pill" placeholder="🔍 Rechercher un film dans ma collection..." @bind="motCleRecherche" @bind:event="oninput" />
+        </div>
+
+        <div class="categories-container">
+            <button class="btn-cat @(!categoriesSelectionnees.Any() ? "active" : "")" @onclick="EffacerFiltres">Tous</button>
+            <div class="cat-separator">|</div>
+            
+            <div class="cat-carousel-wrapper">
+                <div class="cat-carousel" id="cat-scroll">
+                    @foreach (var cat in categoriesActives)
+                    {
+                        <button class="btn-cat @(categoriesSelectionnees.Contains(cat) ? "active" : "")" 
+                                @onclick="() => ToggleCategorie(cat)">@cat</button>
+                    }
                 </div>
             </div>
+            
+            @if (categoriesActives.Count > 4)
+            {
+                <div class="nav-pill">
+                    <button class="nav-btn" @onclick="ScrollLeft" title="Défiler à gauche">&#60;</button>
+                    <div class="nav-separator">|</div>
+                    <button class="nav-btn" @onclick="ScrollRight" title="Défiler à droite">&#62;</button>
+                </div>
+            }
+        </div>
+
+        <div class="movie-grid">
+            @foreach (var film in FilmsFiltres)
+            {
+                <div class="movie-card" 
+                     @onmouseenter="() => hoveredFilmId = film.Id" 
+                     @onmouseleave="() => { if(hoveredFilmId == film.Id) hoveredFilmId = null; }"
+                     @onclick="() => VoirFiche(film.Id)">
+                    
+                    <img src="@GetPosterUrl(film.Jacquette)" class="movie-poster" alt="@film.Titre" />
+                    <div class="movie-title-overlay">@film.Titre</div>
+                </div>
+            }
+        </div>
+        
+        @if (!FilmsFiltres.Any())
+        {
+            <div class="text-center text-white mt-4">
+                <p>Aucun film ne correspond à vos filtres. 😔</p>
+                <button class="btn-cat mt-3" @onclick="EffacerFiltres">Réinitialiser les filtres</button>
+            </div>
         }
-    </div>
-}
+    }
+</div>
+
+<script>
+    window.scrollInterop = {
+        scroll: function (distance) {
+            const el = document.getElementById('cat-scroll');
+            if (el) el.scrollBy({ left: distance, behavior: 'smooth' });
+        }
+    };
+</script>
 
 @code {
-    List<Film> mesFilms = new List<Film>();
+    private List<Film> mesFilms = new List<Film>();
+    
+    private Dictionary<int, List<string>> categoriesFilms = new();
+    private List<string> categoriesActives = new();
+    private HashSet<string> categoriesSelectionnees = new();
+
+    private string motCleRecherche = "";
+    private int? hoveredFilmId = null;
+
+    // --- MOTEUR DE FILTRAGE ---
+    private IEnumerable<Film> FilmsFiltres 
+    {
+        get
+        {
+            var result = mesFilms.AsEnumerable();
+
+            if (!string.IsNullOrWhiteSpace(motCleRecherche))
+            {
+                result = result.Where(f => f.Titre != null && f.Titre.Contains(motCleRecherche, StringComparison.OrdinalIgnoreCase));
+            }
+
+            if (categoriesSelectionnees.Any())
+            {
+                result = result.Where(f => 
+                    categoriesFilms.ContainsKey(f.Id) && 
+                    categoriesSelectionnees.Any(cat => categoriesFilms[f.Id].Contains(cat))
+                );
+            }
+
+            return result.OrderBy(f => f.Titre);
+        }
+    }
 
     protected override void OnInitialized()
     {
-        ChargerFilms();
-    }
-
-    void ChargerFilms()
-    {
-        // Appelle ta fonction SQL qui fait "SELECT *"
         mesFilms = AdoFilm.getAll();
+        categoriesFilms = AdoFilm.GetCategoriesParFilm();
+        categoriesActives = categoriesFilms.Values
+            .SelectMany(c => c)
+            .Distinct()
+            .OrderBy(c => c)
+            .ToList();
     }
 
-    void Supprimer(int id)
+    private void ToggleCategorie(string cat)
     {
-        AdoFilm.delete(id);
-        ChargerFilms(); // Recharger la liste après suppression
+        if (categoriesSelectionnees.Contains(cat))
+            categoriesSelectionnees.Remove(cat);
+        else
+            categoriesSelectionnees.Add(cat);
+    }
+
+    private void EffacerFiltres()
+    {
+        categoriesSelectionnees.Clear();
+        motCleRecherche = "";
+    }
+
+    // --- FONCTIONS DE DÉFILEMENT LIÉES AUX NOUVEAUX BOUTONS ---
+    private async Task ScrollLeft()
+    {
+        await JS.InvokeVoidAsync("scrollInterop.scroll", -300);
+    }
+
+    private async Task ScrollRight()
+    {
+        await JS.InvokeVoidAsync("scrollInterop.scroll", 300);
+    }
+
+    // --- URL DES IMAGES ---
+    private string GetPosterUrl(string cheminImage)
+    {
+        if (string.IsNullOrWhiteSpace(cheminImage) || cheminImage == "N/A") return "https://via.placeholder.com/300x450/1e1e1e/ffffff?text=Affiche+Indisponible";
+        cheminImage = cheminImage.Trim();
+        if (cheminImage.StartsWith("http", StringComparison.OrdinalIgnoreCase)) return cheminImage;
+        if (cheminImage.StartsWith("/")) return $"https://image.tmdb.org/t/p/w500{cheminImage}"; 
+        return cheminImage;
+    }
+
+    private string GetBackdropUrl(string cheminFond)
+    {
+        if (string.IsNullOrWhiteSpace(cheminFond) || cheminFond == "N/A") return "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=2070&auto=format&fit=crop"; 
+        cheminFond = cheminFond.Trim();
+        if (cheminFond.StartsWith("http", StringComparison.OrdinalIgnoreCase)) return cheminFond;
+        if (cheminFond.StartsWith("/")) return $"https://image.tmdb.org/t/p/w1280{cheminFond}";
+        return cheminFond;
+    }
+
+    private void VoirFiche(int id)
+    {
+        // Nav.NavigateTo($"/details-film/{id}");
     }
 }
