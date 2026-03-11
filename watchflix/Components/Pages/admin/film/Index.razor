@@ -3,8 +3,13 @@
 @using watchflix.Models
 @using watchflix.Repositories
 @inject AdoFilm Repo
+@inject NavigationManager Navigation
 
 <PageTitle>Films</PageTitle>
+
+<div class="d-flex justify-content-end">
+    <button class="btn btn-primary btn-lg" @onclick='() => Navigation.NavigateTo("/test-api")'>Ajouter un film</button>
+</div>
 
 @if (data != null)
 {
@@ -12,8 +17,8 @@
         <thead>
             <tr>
                 <th scope="col">Titre</th>
-                <th scope="col">Date de sortie</th>
                 <th scope="col">Réalisateur</th>
+                <th scope="col">Date de sortie</th>
                 <th scope="col">Durée</th>
                 <th scope="col">Pegi</th>
                 <th scope="col">Actions</th>
@@ -24,12 +29,12 @@
             {
                 <tr>
                     <td> @film.Titre </td>
-                    <td> @film.Dte_sortie </td>
                     <td> @film.Realisateur </td>
+                    <td> @film.Dte_sortie.Split(" ")[^2] </td>
                     <td> @film.Duree </td>
                     <td> @film.Pegi </td>
                     <td>
-                        <button class="btn btn-primary" @onclick="() => OpenModal(film)">Voir détails</button>
+                        <button class="btn btn-secondary" @onclick="() => OpenModal(film)">Voir détails</button>
                         <button class="btn btn-danger" @onclick="() => OpenDeleteModal(film)">Supprimer</button>
                     </td>
                 </tr>  
@@ -72,10 +77,10 @@
                             <div class="col-md-3">
                                 <div class="p-3 bg-light rounded-3">
                                     <small class="text-muted d-block">
-                                        Date de sortie
+                                        Année de sortie
                                     </small>
                                     <span class="fw-semibold">
-                                        @selectedFilm.Dte_sortie
+                                        @selectedFilm.Dte_sortie.Split(" ")[^2]
                                     </span>
                                 </div>
                             </div>

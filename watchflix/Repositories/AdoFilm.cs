@@ -14,7 +14,7 @@ namespace watchflix.Repositories
             List<Film> films = new List<Film>();
             open();
             // CORRECTION ICI : date_sortie au lieu de annee_sortie, et synopsys au lieu de synopsis
-            string query = "SELECT id_film, titre_film, duree_film, date_sortie, pegi, jacquette, synopsys, bande_annonce, realisateur, fond FROM Film";
+            string query = "SELECT id_film, titre_film, pegi, jacquette, synopsys, bande_annonce, realisateur, fond, date_sortie, duree_film FROM Film";
             
             SqlCommand cmd = new SqlCommand(query, connexion);
             SqlDataReader reader = cmd.ExecuteReader();
