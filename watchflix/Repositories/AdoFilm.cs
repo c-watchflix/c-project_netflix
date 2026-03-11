@@ -24,9 +24,21 @@ namespace watchflix.Repositories
 
             while (reader.Read())
             {
-                films.Add(new Film(reader.GetInt32(0), reader.GetString(1)));
-            }
+                films.Add(new Film(
+                    reader.GetInt32(0),  // id
+                    reader.GetString(1), // titre
+                    reader.GetString(2), // pegi
+                    reader.GetString(3), // jacquette
+                    reader.GetString(4), // synopsys
+                    reader.GetString(5), // bande_annonce
+                    reader.GetString(6), // realisateur
+                    reader.GetString(7),  // fond
+                    reader.GetString(8),  // fond
+                    reader.GetString(9)  // fond
 
+                ));
+            }
+            //getTimeOnly ou DateOnly n'existe as, il faut faire la conversion manuellement 
             close();
             return films;
 
@@ -34,14 +46,27 @@ namespace watchflix.Repositories
 
         public static List<Film> getOneById(int id)
         {
-            List<Models.Film> film = new List<Models.Film>();
+            List<Film> film = new List<Film>();
+            open();
+            SqlCommand cmd = new SqlCommand("SELECT * FROM Film WHERE id_film = @Id", connexion);
+            cmd.Parameters.AddWithValue("@Id", id);
+            SqlDataReader reader = cmd.ExecuteReader();
+            while (reader.Read()) { 
+                film.Add(new Film(reader.GetInt32(0), reader.GetString(1))); 
+            }
+            close();
+            return film;
+        }
+
+        public static List<Film> getOneByName(string titre)
+        {
+            List<Film> film = new List<Film>();
             open();
             SqlCommand cmd = new SqlCommand();
             cmd.Connection = connexion;
-            cmd.CommandText = "SELECT * FROM film WHERE id_film = @Id_film";
-            cmd.Parameters.AddWithValue("@Id_film", id);
-            cmd.ExecuteNonQuery();
-
+            cmd.CommandText = "SELECT * FROM Film WHERE titre_film LIKE @Titre";
+            cmd.Parameters.AddWithValue("@Titre", "%" + titre + "%");
+            
             SqlDataReader reader = cmd.ExecuteReader();
 
             while (reader.Read())
@@ -51,26 +76,7 @@ namespace watchflix.Repositories
             close();
             return film;
         }
-
-        public static List<Film> getOneByName(string titre)
-        {
-            List<Models.Film> films = new List<Models.Film>();
-            open();
-            SqlCommand cmd = new SqlCommand();
-            cmd.Connection = connexion;
-            cmd.CommandText = "SELECT * FROM Film  WHERE titre_film LIKE '%' + @Titre_film + '%'";
-            cmd.Parameters.AddWithValue("@Titre_film", titre);
-            cmd.ExecuteNonQuery();
-            
-            SqlDataReader reader = cmd.ExecuteReader();
-
-            while (reader.Read())
-            {
-                films.Add(new Film(reader.GetInt32(0), reader.GetString(1)));
-            }
-            close();
-            return films;
-        }
+ 
 
         public static void delete(int Id_film)
         {
@@ -116,7 +122,7 @@ namespace watchflix.Repositories
             open();
             SqlCommand cmd = new SqlCommand();
             cmd.Connection = connexion;
-            cmd.CommandText = "INSERT INTO film_musique VALUES ('@Id_film','@Id_musique')";
+            cmd.CommandText = "INSERT INTO film_musique VALUES (@Id_film, @Id_musique)";
             cmd.Parameters.AddWithValue("@Id_film", Id_film);
             cmd.Parameters.AddWithValue("@Id_musique", Id_musique);
             cmd.ExecuteNonQuery();
@@ -128,9 +134,9 @@ namespace watchflix.Repositories
             open();
             SqlCommand cmd = new SqlCommand();
             cmd.Connection = connexion;
-            cmd.CommandText = "INSERT INTO film_musique VALUES ('@Id_film','@Id_categorie')";
+            cmd.CommandText = "INSERT INTO film_musique VALUES (@Id_film, @Id_categorie)";
             cmd.Parameters.AddWithValue("@Id_film", Id_film);
-            cmd.Parameters.AddWithValue("@Id_musique", Id_categorie);
+            cmd.Parameters.AddWithValue("@Id_categorie", Id_categorie);
             cmd.ExecuteNonQuery();
             close();
         }
