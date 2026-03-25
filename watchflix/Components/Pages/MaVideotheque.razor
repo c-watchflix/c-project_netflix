@@ -37,36 +37,8 @@
         text-shadow: 0 2px 10px rgba(0,0,0,0.5);
     }
 
-    /* --- 4. BARRE DE RECHERCHE --- */
-    .search-container {
-        display: flex;
-        justify-content: center;
-        margin-bottom: 20px; 
-    }
-
-    .search-pill {
-        width: 100%;
-        max-width: 800px; 
-        padding: 12px 25px;
-        border-radius: 50px; 
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        background: rgba(30, 30, 30, 0.6);
-        color: white;
-        font-size: 1.1rem;
-        backdrop-filter: blur(10px); 
-        outline: none;
-        transition: 0.3s;
-        text-align: center;
-    }
-
-    .search-pill::placeholder { color: rgba(255, 255, 255, 0.6); }
-    .search-pill:focus {
-        background: rgba(40, 40, 40, 0.8);
-        border-color: rgba(255, 255, 255, 0.5);
-        box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
-    }
-
-    /* --- 5. BARRE DE CATÉGORIES DYNAMIQUE --- */
+    /* --- 4. BARRE DE CATÉGORIES DYNAMIQUE --- */
+    /* (La classe search-container a été supprimée) */
     .categories-container {
         display: flex;
         align-items: center;
@@ -126,18 +98,16 @@
     }
     .cat-carousel::-webkit-scrollbar { display: none; } 
 
-/* --- NOUVEAU BOUTON PILULE (Avec Transparence Glassmorphism) --- */
+    /* --- NOUVEAU BOUTON PILULE (Avec Transparence Glassmorphism) --- */
     .nav-pill {
         display: flex;
         align-items: center;
-        /* Même fond semi-transparent que les autres boutons */
         background: rgba(255, 255, 255, 0.1); 
         border: 1px solid rgba(255, 255, 255, 0.2);
         border-radius: 50px; 
         margin-left: 10px;
         overflow: hidden; 
         flex-shrink: 0;
-        /* Ajout de l'effet verre flouté */
         backdrop-filter: blur(10px); 
         -webkit-backdrop-filter: blur(10px);
     }
@@ -161,10 +131,10 @@
     .nav-separator {
         color: rgba(255, 255, 255, 0.3);
         font-size: 1rem;
-        user-select: none; /* Empêche de surligner le "|" en bleu par erreur */
+        user-select: none; 
     }
 
-    /* --- 6. GRILLE DE FILMS --- */
+    /* --- 5. GRILLE DE FILMS --- */
     .movie-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -174,7 +144,7 @@
         margin: 0 auto;
     }
 
-    /* --- 7. CARTE DU FILM --- */
+    /* --- 6. CARTE DU FILM --- */
     .movie-card {
         position: relative; 
         border-radius: 16px;
@@ -228,11 +198,10 @@
     }
 
     /* =========================================
-       8. RESPONSIVE DESIGN
+       7. RESPONSIVE DESIGN
        ========================================= */
     @@media (max-width: 768px) {
         .page-title { font-size: 1.5rem; margin-bottom: 20px; }
-        .search-pill { width: 90%; font-size: 1rem; padding: 10px 20px; }
         .categories-container { width: 90%; }
         .movie-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px; padding: 10px; }
         .movie-title-overlay {
@@ -272,10 +241,6 @@
     }
     else
     {
-        <div class="search-container">
-            <input type="text" class="search-pill" placeholder="🔍 Rechercher un film dans ma collection..." @bind="motCleRecherche" @bind:event="oninput" />
-        </div>
-
         <div class="categories-container">
             <button class="btn-cat @(!categoriesSelectionnees.Any() ? "active" : "")" @onclick="EffacerFiltres">Tous</button>
             <div class="cat-separator">|</div>
@@ -340,7 +305,10 @@
     private List<string> categoriesActives = new();
     private HashSet<string> categoriesSelectionnees = new();
 
-    private string motCleRecherche = "";
+    // ICI EST LA MAGIE : On écoute l'URL ! (?search=Shrek)
+    [SupplyParameterFromQuery(Name = "search")]
+    private string? motCleRecherche { get; set; } = "";
+
     private int? hoveredFilmId = null;
 
     // --- MOTEUR DE FILTRAGE ---
@@ -350,6 +318,7 @@
         {
             var result = mesFilms.AsEnumerable();
 
+            // On filtre en utilisant la variable qui est maintenant liée à l'URL
             if (!string.IsNullOrWhiteSpace(motCleRecherche))
             {
                 result = result.Where(f => f.Titre != null && f.Titre.Contains(motCleRecherche, StringComparison.OrdinalIgnoreCase));
@@ -389,10 +358,14 @@
     private void EffacerFiltres()
     {
         categoriesSelectionnees.Clear();
-        motCleRecherche = "";
+        // Si on efface les filtres, on enlève aussi la recherche de l'URL pour tout réafficher
+        if (!string.IsNullOrEmpty(motCleRecherche))
+        {
+            Nav.NavigateTo("/ma-videotheque"); 
+        }
     }
 
-    // --- FONCTIONS DE DÉFILEMENT LIÉES AUX NOUVEAUX BOUTONS ---
+    // --- FONCTIONS DE DÉFILEMENT ---
     private async Task ScrollLeft()
     {
         await JS.InvokeVoidAsync("scrollInterop.scroll", -300);
