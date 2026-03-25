@@ -87,6 +87,27 @@ namespace watchflix.Repositories
             return users;
         }
 
+        public static List<User> search(string Search)
+        {
+            List<User> users = new List<User>();
+            open();
+            SqlCommand cmd = new SqlCommand();
+            cmd.Connection = connexion;
+            cmd.CommandText = "SELECT * FROM Utilisateur WHERE nom LIKE '%' + @Search + '%' OR id_utilisateur LIKE '%' + @Search + '%'";
+            cmd.Parameters.AddWithValue("@Search", Search);
+            cmd.ExecuteNonQuery();
+
+            SqlDataReader reader = cmd.ExecuteReader();
+
+            while (reader.Read())
+            {
+                users.Add(new User(reader.GetInt32(0), reader.GetString(1), reader.GetString(2), reader.GetString(3), reader.GetString(4), reader.GetString(5), reader.GetBoolean(6)));
+            }
+
+            close();
+            return users;
+        }
+
         public static void update(User user)
         {
             open();
