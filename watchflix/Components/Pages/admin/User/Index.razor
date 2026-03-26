@@ -1,0 +1,146 @@
+@page "/admin/user"
+@rendermode InteractiveServer
+@using Azure.Core
+@using watchflix.Models
+@using watchflix.Repositories
+@inject AdoUser Repo
+@inject IJSRuntime JS
+
+<PageTitle>User</PageTitle>
+
+<h5>Tous les utilisateurs</h5>
+
+<nav class="navbar navbar-light bg-light">
+<form class="form-inline">
+    <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search" @bind="wordSearch" @bind:event="oninput">
+</form>
+</nav>
+
+<NavLink class="btn btn-primary btn-sm" href="admin/user.create"> Créer </NavLink>
+
+<table class="table table-striped">
+    <thead class="thead-light">
+        <tr>
+        <th scope="col">#</th>
+        @* <th @onclick='() => Sort("Nom")' style="cursor:pointer">Nom</th>
+        <th @onclick='() => Sort("Prenom")' style="cursor:pointer">Prénom</th>
+        <th @onclick='() => Sort("Courriel")' style="cursor:pointer">Mail</th>
+        <th @onclick='() => Sort("Pseudo")' style="cursor:pointer">Pseudo</th> *@
+
+        <th @onclick='() => Sort("Nom")' style="cursor:pointer">
+            Nom @SortIcon("Nom")
+        </th>
+
+        <th @onclick='() => Sort("Prenom")' style="cursor:pointer">
+            Prénom @SortIcon("Prenom")
+        </th>
+
+        <th @onclick='() => Sort("Courriel")' style="cursor:pointer">
+            Mail @SortIcon("Courriel")
+        </th>
+
+        <th @onclick='() => Sort("Pseudo")' style="cursor:pointer">
+            Pseudo @SortIcon("Pseudo")
+        </th>
+        <th class="text-center" scope="col">Administrateur</th>
+        <th scope="col">Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var user in dataSearch) 
+        {
+            @if (@user.Is_admin) {
+                admin = "⭐️";
+            } else {
+                admin = ""; 
+            }
+            <tr>
+                <th scope="row">@user.Id</th>
+                <td>@user.Nom</td>
+                <td>@user.Prenom</td>
+                <td>@user.Courriel</td>
+                <td>@user.Pseudo</td>
+                <td class="text-center">@admin</td>
+                <td> <NavLink class="btn btn-warning btn-sm" href="@($"admin/user.update/{user.Id}")"> Update </NavLink>
+                    <button class="btn btn-danger btn-sm" @onclick="() => delete(user.Id)">Delete</button></td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+
+@code {
+        
+    IEnumerable<User>? data = AdoUser.getAll();
+    IEnumerable<User>? OneByName; 
+    IEnumerable<User>? OneById;  
+    string wordSearch = "";
+    string? admin;
+    string currentSortColumn = "";
+    bool asc = true;
+
+
+    void Sort(string column)
+    {
+        if (currentSortColumn == column)
+            asc = !asc;
+        else
+            asc = true;
+
+        currentSortColumn = column;
+
+        data = column switch
+        {
+            "Nom" => asc ? data.OrderBy(u => u.Nom).ToList() : data.OrderByDescending(u => u.Nom).ToList(),
+            "Prenom" => asc ? data.OrderBy(u => u.Prenom).ToList() : data.OrderByDescending(u => u.Prenom).ToList(),
+            "Courriel" => asc ? data.OrderBy(u => u.Courriel).ToList() : data.OrderByDescending(u => u.Courriel).ToList(),
+            "Pseudo" => asc ? data.OrderBy(u => u.Pseudo).ToList() : data.OrderByDescending(u => u.Pseudo).ToList(),
+            _ => data
+        };
+    }       // permet de trier les colonnes par ordre alphabétique 
+
+
+    private async Task delete (int id)
+    {
+        bool confirm = await JS.InvokeAsync<bool>(
+        "confirm",
+        "Voulez-vous vraiment supprimer cet utilisateur ?"
+        );
+
+        if (!confirm)
+            return;
+
+        AdoUser.delete(id);
+
+        // Recharger la liste après suppression
+        data = AdoUser.getAll();
+    }
+
+    IEnumerable<User> dataSearch => data.Where(i => i.nom.Contains(wordSearch, StringComparison.OrdinalIgnoreCase) || i.prenom.Contains(wordSearch, StringComparison.OrdinalIgnoreCase));
+
+    RenderFragment SortIcon(string column) => builder =>
+    {
+        if (currentSortColumn == column)
+        {
+            var icon = asc ? "bi-arrow-up-short" : "bi-arrow-down-short";
+
+            builder.OpenElement(0, "i");
+            builder.AddAttribute(1, "class", $"bi {icon}");
+            builder.AddContent(2, " ");
+            builder.CloseElement();
+        }
+    };    // la fonction permet d'ajouter à côté du nom de la colonne une flèche html en fonction du tri 
+
+
+    // pas utilisé 
+    private void getOneByName()
+    {   
+        OneByName = AdoUser.getOneByName("li");
+    }
+
+    private void getOneById()
+    {   
+        OneById = AdoUser.getOneById(4);
+    }
+
+}

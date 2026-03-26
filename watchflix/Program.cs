@@ -16,9 +16,7 @@ builder.Services.AddScoped<AdoArtiste>();
 builder.Services.AddScoped<AdoCategorie>();
 builder.Services.AddScoped<AdoUser>();
 builder.Services.AddScoped<AdoMusique>();
-builder.Services.AddScoped<Authentification>();
-
-builder.Services.AddAuthorizationCore();
+builder.Services.AddScoped<watchflix.Services.TmdbService>();
 
 var app = builder.Build();
 

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace watchflix.Models
 { 
@@ -15,7 +17,7 @@ namespace watchflix.Models
         public string courriel;
         public string pseudo;
         public string mdp;
-        public bool? is_admin;
+        public bool is_admin;
 
 
         //controller
@@ -48,6 +50,7 @@ namespace watchflix.Models
         public string Courriel { get =>courriel; set => courriel = value;}
         public string Pseudo { get =>pseudo; set => pseudo = value;}
         public string Mdp { get =>mdp; set => mdp = value;}
-        public bool? Is_admin { get =>is_admin; set => is_admin = value;}
+        public bool Is_admin { get =>is_admin; set => is_admin = value;}
+
     }
 }

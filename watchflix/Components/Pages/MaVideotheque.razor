@@ -1,0 +1,55 @@
+@page "/ma-videotheque"
+@using watchflix.Models
+@using watchflix.Repositories
+@inject NavigationManager Nav
+
+<h3>🎬 Ma Vidéothèque Personnelle</h3>
+
+@if (mesFilms.Count == 0)
+{
+    <p>Aucun film dans la base de données.</p>
+    <a href="/test-api" class="btn btn-primary">Aller chercher des films</a>
+}
+else
+{
+    <div style="display: flex; flex-wrap: wrap; gap: 20px;">
+        @foreach (var film in mesFilms)
+        {
+            <div class="card" style="width: 18rem;">
+                <img src="@film.Jacquette" class="card-img-top" alt="@film.Titre" 
+                     style="height: 400px; object-fit: cover;">
+                
+                <div class="card-body">
+                    <h5 class="card-title">@film.Titre</h5>
+                    <h6 class="card-subtitle mb-2 text-muted">@film.Dte_sortie - @film.Pegi</h6>
+                    <p class="card-text">@film.Duree</p>
+                    
+                    <button class="btn btn-sm btn-outline-primary">Voir fiche</button>
+                    
+                    <button class="btn btn-sm btn-danger" @onclick="() => Supprimer(film.Id)">🗑</button>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    List<Film> mesFilms = new List<Film>();
+
+    protected override void OnInitialized()
+    {
+        ChargerFilms();
+    }
+
+    void ChargerFilms()
+    {
+        // Appelle ta fonction SQL qui fait "SELECT *"
+        mesFilms = AdoFilm.getAll();
+    }
+
+    void Supprimer(int id)
+    {
+        AdoFilm.delete(id);
+        ChargerFilms(); // Recharger la liste après suppression
+    }
+}

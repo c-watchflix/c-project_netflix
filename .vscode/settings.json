@@ -1,3 +1,4 @@
 {
-    "dotnet.defaultSolution": "watchflix.sln"
+    "dotnet.defaultSolution": "watchflix.sln",
+    "cSpell.enabled": false
 }
