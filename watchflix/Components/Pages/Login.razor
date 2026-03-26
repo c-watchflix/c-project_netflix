@@ -1,0 +1,74 @@
+@page "/login"
+
+@rendermode InteractiveServer
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Web
+@inject NavigationManager NavigationManager
+@inject watchflix.Services.Authentification Authentification
+
+<EditForm Model="@loginModel" OnValidSubmit="HandleLogin" @formname="LoginForm">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div>
+        <label for="pseudo">Pseudo</label>
+        <InputText id="pseudo" class="form-control"
+                   @bind-Value="loginModel.Pseudo" />
+    </div>
+
+    <div>
+        <label for="password">Mot de passe</label>
+        <InputText id="password" class="form-control"
+                   type="password"
+                   @bind-Value="loginModel.Password" />
+    </div>
+
+    <button type="submit">Se connecter</button>
+</EditForm>
+
+@if (!string.IsNullOrWhiteSpace(ErrorMessage))
+{
+    <p style="color:red">@ErrorMessage</p>
+}
+
+@code {
+    private LoginModel loginModel = new();
+    private string ErrorMessage = string.Empty;
+
+private async Task HandleLogin()
+{
+    ErrorMessage = string.Empty;
+
+    try
+    {
+        var (user, errorMessage) = await Authentification.LoginAsync(
+            loginModel.Pseudo,
+            loginModel.Password
+        );
+
+        if (user == null)
+        {
+            ErrorMessage = errorMessage;
+            return;
+        }
+
+        await Authentification.PersistUserAsync(user);
+
+        NavigationManager.NavigateTo("/");
+    }
+    catch (Exception)
+    {
+        ErrorMessage = "Erreur lors de la connexion.";
+    }
+}
+
+    public class LoginModel
+    {
+        [Required(ErrorMessage = "Le pseudo est obligatoire")]
+        public string Pseudo { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Le mot de passe est obligatoire")]
+        public string Password { get; set; } = string.Empty;
+    }
+}

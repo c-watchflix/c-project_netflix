@@ -16,13 +16,17 @@ namespace watchflix.Repositories
             open();    //ouverture de la connexion a la bdd
             SqlCommand cmd = new SqlCommand();
             cmd.Connection = connexion;
+
+            // Hachage du mot de passe avant l'insertion
+            string hashedPassword = watchflix.Services.Authentification.HashPassword(user.Mdp);
+
             cmd.CommandText = "INSERT INTO Utilisateur (nom, prenom, courriel, pseudo, mdp, is_admin) VALUES (@nom,@prenom,@courriel,@pseudo,@mdp,@is_admin)";
             cmd.Parameters.AddWithValue("@nom", user.Nom);
-            cmd.Parameters.AddWithValue("@prenom",user.Prenom);
-            cmd.Parameters.AddWithValue("@courriel",user.Courriel);
-            cmd.Parameters.AddWithValue("@pseudo",user.Pseudo);
-            cmd.Parameters.AddWithValue("@mdp",user.Mdp);
-            cmd.Parameters.AddWithValue("@is_admin",user.Is_admin);
+            cmd.Parameters.AddWithValue("@prenom", user.Prenom);
+            cmd.Parameters.AddWithValue("@courriel", user.Courriel);
+            cmd.Parameters.AddWithValue("@pseudo", user.Pseudo);
+            cmd.Parameters.AddWithValue("@mdp", hashedPassword);
+            cmd.Parameters.AddWithValue("@is_admin", user.Is_admin);
             cmd.ExecuteNonQuery();                  // pour executer la commande 
             close();   // fermeture de la connexion a la bdd 
         }
@@ -92,13 +96,17 @@ namespace watchflix.Repositories
             open();
             SqlCommand cmd = new SqlCommand();
             cmd.Connection = connexion;
+
+            // Hachage du mot de passe avant la mise à jour
+            string hashedPassword = watchflix.Services.Authentification.HashPassword(user.Mdp);
+
             cmd.CommandText = "UPDATE Utilisateur SET nom = @nom, prenom = @prenom, courriel = @courriel, pseudo = @pseudo, mdp = @mdp, is_admin = @is_admin WHERE id_utilisateur = @Id";
             cmd.Parameters.AddWithValue("@Id", user.Id);
             cmd.Parameters.AddWithValue("@nom", user.Nom);
             cmd.Parameters.AddWithValue("@prenom", user.Prenom);
             cmd.Parameters.AddWithValue("@courriel", user.Courriel);
             cmd.Parameters.AddWithValue("@pseudo", user.Pseudo);
-            cmd.Parameters.AddWithValue("@mdp", user.Mdp);
+            cmd.Parameters.AddWithValue("@mdp", hashedPassword);
             cmd.Parameters.AddWithValue("@is_admin", user.Is_admin);
             cmd.ExecuteNonQuery();
             close();
@@ -116,6 +124,33 @@ namespace watchflix.Repositories
 
         }
 
+        public static User Authenticate(string pseudo, string mdp)
+        {
+            User user = null;
+            open();
+            SqlCommand cmd = new SqlCommand();
+            cmd.Connection = connexion;
+            cmd.CommandText = "SELECT * FROM Utilisateur WHERE pseudo = @pseudo AND mdp = @mdp";
+            cmd.Parameters.AddWithValue("@pseudo", pseudo);
+            cmd.Parameters.AddWithValue("@mdp", mdp);
 
+            SqlDataReader reader = cmd.ExecuteReader();
+
+            if (reader.Read())
+            {
+                user = new User(
+                    reader.GetInt32(0),
+                    reader.GetString(1),
+                    reader.GetString(2),
+                    reader.GetString(3),
+                    reader.GetString(4),
+                    reader.GetString(5),
+                    reader.GetBoolean(6)
+                );
+            }
+
+            close();
+            return user;
+        }
     }
 }

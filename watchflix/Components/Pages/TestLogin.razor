@@ -1,0 +1,172 @@
+@page "/test-login"
+@rendermode InteractiveServer
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Web
+@inject NavigationManager NavigationManager
+@inject watchflix.Services.Authentification Authentification
+@inject watchflix.Repositories.AdoUser AdoUser
+
+<h3>Test de l'authentification</h3>
+
+<EditForm Model="@loginModel"
+          OnValidSubmit="HandleLogin"
+          FormName="TestLoginForm">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div>
+        <label for="pseudo">Pseudo</label>
+        <InputText id="pseudo" class="form-control" @bind-Value="loginModel.Pseudo" />
+    </div>
+
+    <div>
+        <label for="password">Mot de passe</label>
+        <InputText id="password" class="form-control" type="password" @bind-Value="loginModel.Password" />
+    </div>
+
+    <button type="submit">Tester la connexion</button>
+</EditForm>
+
+@if (!string.IsNullOrWhiteSpace(ErrorMessage))
+{
+    <p style="color:red">@ErrorMessage</p>
+}
+
+@if (User != null)
+{
+    <p style="color:green">Connexion réussie ! Bienvenue, @User.Pseudo</p>
+}
+
+<h3>Création d'un utilisateur</h3>
+
+<EditForm Model="@newUserModel" OnValidSubmit="HandleCreateUser">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div>
+        <label for="nom">Nom</label>
+        <InputText id="nom" class="form-control" @bind-Value="newUserModel.Nom" />
+    </div>
+
+    <div>
+        <label for="prenom">Prénom</label>
+        <InputText id="prenom" class="form-control" @bind-Value="newUserModel.Prenom" />
+    </div>
+
+    <div>
+        <label for="courriel">Courriel</label>
+        <InputText id="courriel" class="form-control" @bind-Value="newUserModel.Courriel" />
+    </div>
+
+    <div>
+        <label for="pseudo">Pseudo</label>
+        <InputText id="pseudo" class="form-control" @bind-Value="newUserModel.Pseudo" />
+    </div>
+
+    <div>
+        <label for="password">Mot de passe</label>
+        <InputText id="password" class="form-control" type="password" @bind-Value="newUserModel.Password" />
+    </div>
+
+    <div>
+        <label for="isAdmin">Admin</label>
+        <InputCheckbox id="isAdmin" class="form-check-input" @bind-Value="newUserModel.IsAdmin" />
+    </div>
+
+    <button type="submit">Créer l'utilisateur</button>
+</EditForm>
+
+@if (!string.IsNullOrWhiteSpace(CreateUserMessage))
+{
+    <p style="color:green">@CreateUserMessage</p>
+}
+
+@code {
+    private LoginModel loginModel = new();
+    private string ErrorMessage = string.Empty;
+    private watchflix.Models.User? User;
+    private CreateUserModel newUserModel = new();
+    private string CreateUserMessage = string.Empty;
+
+    private async Task HandleLogin()
+    {
+        ErrorMessage = string.Empty;
+        User = null;
+
+        try
+        {
+            var (user, errorMessage) = await Authentification.LoginAsync(loginModel.Pseudo, loginModel.Password);
+            if (user == null)
+            {
+                ErrorMessage = errorMessage;
+                return;
+            }
+
+            User = user;
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+        catch (Exception)
+        {
+            ErrorMessage = "Erreur lors de la connexion.";
+        }
+    }
+
+    private void HandleCreateUser()
+    {
+        CreateUserMessage = string.Empty;
+
+        try
+        {
+            string? hashedPassword = watchflix.Services.Authentification.HashPassword(newUserModel.Password);
+            var newUser = new watchflix.Models.User(
+                newUserModel.Nom,
+                newUserModel.Prenom,
+                newUserModel.Courriel,
+                newUserModel.Pseudo,
+                hashedPassword,
+                newUserModel.IsAdmin
+            );
+
+            watchflix.Repositories.AdoUser.create(newUser);
+            CreateUserMessage = "Utilisateur créé avec succès !";
+        }
+        catch (Exception ex)
+        {
+            CreateUserMessage = $"Erreur lors de la création de l'utilisateur : {ex.Message}";
+        }
+    }
+
+    public class LoginModel
+    {
+        [Required(ErrorMessage = "Le pseudo est obligatoire")]
+        public string Pseudo { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Le mot de passe est obligatoire")]
+        public string Password { get; set; } = string.Empty;
+    }
+
+    public class CreateUserModel
+    {
+        [Required(ErrorMessage = "Le nom est obligatoire")]
+        public string Nom { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Le prénom est obligatoire")]
+        public string Prenom { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Le courriel est obligatoire")]
+        [EmailAddress(ErrorMessage = "Adresse e-mail invalide")]
+        public string Courriel { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Le pseudo est obligatoire")]
+        public string Pseudo { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Le mot de passe est obligatoire")]
+        public string Password { get; set; } = string.Empty;
+
+        public bool IsAdmin { get; set; } = false;
+    }
+}

@@ -1,8 +1,11 @@
 ﻿@page "/counter"
 @rendermode InteractiveServer
 
+<AuthGuard>
+
 <PageTitle>Counter</PageTitle>
 
+</AuthGuard>
 <h1>Counter</h1>
 
 <p role="status">Current count: @currentCount</p>

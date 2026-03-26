@@ -1,0 +1,44 @@
+@inject NavigationManager NavigationManager
+@inject watchflix.Services.Authentification Authentification
+
+@if (!isReady)
+{
+    <p>Chargement...</p>
+}
+else if (Authentification.IsAuthenticated)
+{
+    @ChildContent
+}
+
+@code {
+    private bool isReady = false;
+    private bool hasCheckedAuth = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !hasCheckedAuth)
+        {
+            hasCheckedAuth = true;
+
+            try
+            {
+                await Authentification.RestoreUserAsync();
+
+                if (!Authentification.IsAuthenticated)
+                {
+                    NavigationManager.NavigateTo("/login");
+                    return;
+                }
+
+            }
+            catch
+            {
+                isReady = true;
+                StateHasChanged();
+            }
+        }
+    }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+}
