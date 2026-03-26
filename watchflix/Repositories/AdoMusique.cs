@@ -25,7 +25,7 @@ public class AdoMusique : Ado
         return musiques;
     }
 
-    public static Musique GetOneById(int id)
+    public static Musique? GetOneById(int id)
     {
         open();
         string query = "SELECT id_musique, titre_musique FROM Musique WHERE id_musique = @Id_musique";
@@ -33,7 +33,7 @@ public class AdoMusique : Ado
         cmd.Parameters.AddWithValue("@Id_musique", id);
 
         SqlDataReader reader = cmd.ExecuteReader();
-        Musique musique = null;
+        Musique? musique = null;
 
         if (reader.Read())
         {
