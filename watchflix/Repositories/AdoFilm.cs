@@ -46,7 +46,7 @@ namespace watchflix.Repositories
             return films;
         }
 
-        // --- NOUVELLE MÉTHODE : RÉCUPÉRER LES CATÉGORIES DE CHAQUE FILM ---
+        // --- RÉCUPÉRER LES CATÉGORIES DE CHAQUE FILM ---
         public static Dictionary<int, List<string>> GetCategoriesParFilm()
         {
             var dico = new Dictionary<int, List<string>>();
@@ -77,27 +77,42 @@ namespace watchflix.Repositories
             return dico;
         }
 
-        // --- 2. ANCIENNES MÉTHODES (Adaptées) ---
-
-        public static List<Film> getOneById(int id)
+        // --- 2. RÉCUPÉRER UN SEUL FILM COMPLET (Pour la page Fiche Détails) ---
+        public static Film getFilmDetailsById(int id)
         {
-            List<Film> film = new List<Film>();
+            Film film = null;
             using (SqlConnection localConnexion = new SqlConnection(cs))
             {
                 localConnexion.Open();
-                using (SqlCommand cmd = new SqlCommand("SELECT * FROM Film WHERE id_film = @Id", localConnexion))
+                string query = "SELECT id_film, titre_film, duree_film, date_sortie, pegi, jacquette, synopsys, bande_annonce, realisateur, fond FROM Film WHERE id_film = @Id";
+                
+                using (SqlCommand cmd = new SqlCommand(query, localConnexion))
                 {
                     cmd.Parameters.AddWithValue("@Id", id);
                     using (SqlDataReader reader = cmd.ExecuteReader())
                     {
-                        while (reader.Read()) { 
-                            film.Add(new Film(reader.GetInt32(0), reader.GetString(1))); 
+                        if (reader.Read())
+                        {
+                            film = new Film(
+                                reader.GetInt32(0), 
+                                reader.GetString(1), 
+                                reader.IsDBNull(4) ? "N/A" : reader.GetString(4), 
+                                reader.IsDBNull(5) ? "" : reader.GetString(5),    
+                                reader.IsDBNull(6) ? "" : reader.GetString(6),    
+                                reader.IsDBNull(7) ? "" : reader.GetString(7),    
+                                reader.IsDBNull(8) ? "" : reader.GetString(8),    
+                                reader.IsDBNull(9) ? "" : reader.GetString(9),    
+                                reader.IsDBNull(3) ? "" : reader.GetValue(3).ToString(), 
+                                reader.IsDBNull(2) ? "" : reader.GetValue(2).ToString()  
+                            );
                         }
                     }
                 }
             }
             return film;
         }
+
+        // --- AUTRES MÉTHODES ---
 
         public static List<Film> getOneByName(string titre)
         {
@@ -174,7 +189,7 @@ namespace watchflix.Repositories
             {
                 localConnexion.Open();
                 using (SqlCommand cmd = new SqlCommand("INSERT INTO categorie_film VALUES (@Id_film, @Id_categorie)", localConnexion))
-                {
+            {
                     cmd.Parameters.AddWithValue("@Id_film", Id_film);
                     cmd.Parameters.AddWithValue("@Id_categorie", Id_categorie);
                     cmd.ExecuteNonQuery();
