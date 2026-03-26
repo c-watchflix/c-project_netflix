@@ -9,13 +9,13 @@ namespace watchflix.Repositories
 {
     public abstract class Ado
     {
+        // AJOUT DE "Pooling=false;" POUR EMPÊCHER LES CONNEXIONS FANTÔMES DE SATURER LE SERVEUR
+        public static string cs = "Data Source=sql.reseau-labo.fr;Initial Catalog=watchflix;User ID=user_watchflix;Password=pwd_watchflix;TrustServerCertificate=True;Pooling=false;";
+        
         protected static SqlConnection connexion;
 
         public static void open()
         {
-            string cs = $"Data Source=sql.reseau-labo.fr;Initial Catalog=watchflix;User ID=user_watchflix;Password=pwd_watchflix;TrustServerCertificate=True;";
-  
-            //string cs = $"Data Source = LAPTOP-9HK09LIE; Initial Catalog = bd_ap3; Integrated Security = True";
             try
             {
                 connexion = new SqlConnection(cs);
