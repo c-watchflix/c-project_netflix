@@ -44,15 +44,24 @@ public class AdoMusique : Ado
         return musique;
     }
 
-    public static void GetOneByName(Musique musique)
+    public static List<Musique> GetAllByTitle(String Titre)
     {
+        List<Musique> musiques = new List<Musique>();
         open();
         SqlCommand cmd = new SqlCommand();
         cmd.Connection = connexion;
         cmd.CommandText = "SELECT * FROM Musique WHERE titre_musique = @Titre_musique";
-        cmd.Parameters.AddWithValue("@Titre_musique", musique.Titre);
-        cmd.ExecuteNonQuery();
+        cmd.Parameters.AddWithValue("@Titre_musique", Titre);
+        SqlDataReader reader = cmd.ExecuteReader();
+        Musique musique = null;
+
+        if (reader.Read())
+        {
+            musique = new Musique(reader.GetInt32(0), reader.GetString(1));
+        }
+
         close();
+        return musiques;
     }
 
     public static void Delete(int idMusique)
