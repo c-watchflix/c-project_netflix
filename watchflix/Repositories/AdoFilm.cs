@@ -12,11 +12,11 @@ namespace watchflix.Repositories
         // --- 1. MÉTHODES ORIGINALES (Conservées pour rétrocompatibilité) ---
         // =====================================================================
 
-public static List<Film> getAll()
-{
-    List<Film> films = new List<Film>();
-    open();
-    string query = "SELECT id_film, titre_film, pegi, jacquette, synopsys, bande_annonce, realisateur, fond, date_sortie, duree_film FROM Film";
+        public static List<Film> getAll()
+        {
+            List<Film> films = new List<Film>();
+            open();
+            string query = "SELECT id_film, titre_film, pegi, jacquette, synopsys, bande_annonce, realisateur, fond, date_sortie, duree_film FROM Film";
             
             SqlCommand cmd = new SqlCommand(query, connexion);
             SqlDataReader reader = cmd.ExecuteReader();
@@ -36,7 +36,6 @@ public static List<Film> getAll()
                     reader.GetString(7), // fond
                     reader.GetString(8), // date_sortie
                     reader.GetString(9)  // duree_film
-
                 ));
             }
             //getTimeOnly ou DateOnly n'existe as, il faut faire la conversion manuellement 
@@ -84,32 +83,32 @@ public static List<Film> getAll()
             cmd.Connection = connexion;
 
             // Suppression des liaisons avec les musiques
-                    cmd.CommandText = "DELETE FROM film_musique WHERE id_film = @Id_film";
+            cmd.CommandText = "DELETE FROM film_musique WHERE id_film = @Id_film";
             cmd.Parameters.Clear(); 
-                    cmd.Parameters.AddWithValue("@Id_film", Id_film);
-                    cmd.ExecuteNonQuery();
+            cmd.Parameters.AddWithValue("@Id_film", Id_film);
+            cmd.ExecuteNonQuery();
 
             // Suppression des liaisons artistes/musiques orphelines
-                    cmd.CommandText = "DELETE am FROM artiste_musique am INNER JOIN Musique m ON m.id_musique = am.id_musique LEFT JOIN film_musique fm ON fm.id_musique = m.id_musique WHERE fm.id_musique IS NULL";
-                    cmd.Parameters.Clear();
-                    cmd.ExecuteNonQuery();
+            cmd.CommandText = "DELETE am FROM artiste_musique am INNER JOIN Musique m ON m.id_musique = am.id_musique LEFT JOIN film_musique fm ON fm.id_musique = m.id_musique WHERE fm.id_musique IS NULL";
+            cmd.Parameters.Clear();
+            cmd.ExecuteNonQuery();
 
             // Suppression des musiques orphelines
-                    cmd.CommandText = "DELETE FROM Musique WHERE NOT EXISTS (SELECT 1 FROM film_musique film WHERE film.id_musique = Musique.id_musique)";
-                    cmd.Parameters.Clear();
-                    cmd.ExecuteNonQuery();
+            cmd.CommandText = "DELETE FROM Musique WHERE NOT EXISTS (SELECT 1 FROM film_musique film WHERE film.id_musique = Musique.id_musique)";
+            cmd.Parameters.Clear();
+            cmd.ExecuteNonQuery();
 
             // Suppression des liaisons avec les catégories
-                    cmd.CommandText = "DELETE FROM categorie_film WHERE id_film = @Id_film";
-                    cmd.Parameters.Clear();
-                    cmd.Parameters.AddWithValue("@Id_film", Id_film);
-                    cmd.ExecuteNonQuery();
+            cmd.CommandText = "DELETE FROM categorie_film WHERE id_film = @Id_film";
+            cmd.Parameters.Clear();
+            cmd.Parameters.AddWithValue("@Id_film", Id_film);
+            cmd.ExecuteNonQuery();
 
             // Suppression du film
-                    cmd.CommandText = "DELETE FROM Film WHERE id_film = @Id_film";
-                    cmd.Parameters.Clear();
-                    cmd.Parameters.AddWithValue("@Id_film", Id_film);
-                    cmd.ExecuteNonQuery();
+            cmd.CommandText = "DELETE FROM Film WHERE id_film = @Id_film";
+            cmd.Parameters.Clear();
+            cmd.Parameters.AddWithValue("@Id_film", Id_film);
+            cmd.ExecuteNonQuery();
             
             close();
         }
@@ -150,7 +149,6 @@ public static List<Film> getAll()
             using (SqlConnection localConnexion = new SqlConnection(cs))
             {
                 localConnexion.Open();
-                
                 string query = "SELECT cf.id_film, c.libelle FROM categorie_film cf INNER JOIN Categorie c ON cf.id_categorie = c.id_categorie";
                 
                 using (SqlCommand cmd = new SqlCommand(query, localConnexion))
@@ -173,7 +171,7 @@ public static List<Film> getAll()
             return dico;
         }
 
-        // --- 2. RÉCUPÉRER UN SEUL FILM COMPLET (Pour la page Fiche Détails) ---
+        // Récupère l'intégralité des détails d'un film (Utilisé pour la vue détaillée)
         public static Film getFilmDetailsById(int id)
         {
             Film film = null;
@@ -206,22 +204,24 @@ public static List<Film> getAll()
                 }
             }
             return film;
-}
+        }
 
-
-        // --- 3. ÉCRITURE DANS LA BDD ---
+        // =====================================================================
+        // --- 3. ÉCRITURE API DANS LA BDD ---
+        // =====================================================================
+        
         public static async Task<bool> addFilmWhithApi(MovieDetails filmApi)
         {
             try 
             {
                 open();
-
+                
                 // Vérification des doublons
                 string queryCheck = "SELECT COUNT(*) FROM Film WHERE titre_film = @Titre";
                 SqlCommand cmdCheck = new SqlCommand(queryCheck, connexion);
-                    cmdCheck.Parameters.AddWithValue("@Titre", filmApi.Title);
+                cmdCheck.Parameters.AddWithValue("@Titre", filmApi.Title);
                 
-                    int count = (int)(await cmdCheck.ExecuteScalarAsync() ?? 0);
+                int count = (int)(await cmdCheck.ExecuteScalarAsync() ?? 0);
                 if (count > 0) 
                 { 
                     close();
@@ -234,22 +234,22 @@ public static List<Film> getAll()
                     OUTPUT INSERTED.id_film 
                     VALUES (@Titre, @Duree, @Annee, @Pegi, @Poster, @Synop, @Youtube, @Real, @Fond)";
                 SqlCommand cmdInsert = new SqlCommand(queryInsert, connexion);
-
+                
                 // Formatage des données spécifiques (Dates et Durées)
-                    string dateSortie = string.IsNullOrEmpty(filmApi.AnneeSortie) ? "2000-01-01" : $"{filmApi.AnneeSortie}-01-01";
-                    TimeSpan ts = TimeSpan.FromMinutes(filmApi.Runtime);
-                    string dureeStr = string.Format("{0:00}:{1:00}:00", (int)ts.TotalHours, ts.Minutes);
-                    string urlYoutube = filmApi.YoutubeKey != null ? $"https://www.youtube.com/watch?v={filmApi.YoutubeKey}" : "";
-                    
-                    cmdInsert.Parameters.AddWithValue("@Titre", filmApi.Title);
-                    cmdInsert.Parameters.AddWithValue("@Duree", dureeStr);
-                    cmdInsert.Parameters.AddWithValue("@Annee", DateTime.Parse(dateSortie));
-                    cmdInsert.Parameters.AddWithValue("@Pegi", filmApi.Pegi);
-                    cmdInsert.Parameters.AddWithValue("@Poster", filmApi.FullPosterUrl); 
-                    cmdInsert.Parameters.AddWithValue("@Synop", filmApi.Overview ?? "");
-                    cmdInsert.Parameters.AddWithValue("@Youtube", urlYoutube);
-                    cmdInsert.Parameters.AddWithValue("@Real", filmApi.Realisateur ?? "Inconnu");
-                    cmdInsert.Parameters.AddWithValue("@Fond", filmApi.FullBackdropUrl);
+                string dateSortie = string.IsNullOrEmpty(filmApi.AnneeSortie) ? "2000-01-01" : $"{filmApi.AnneeSortie}-01-01";
+                TimeSpan ts = TimeSpan.FromMinutes(filmApi.Runtime);
+                string dureeStr = string.Format("{0:00}:{1:00}:00", (int)ts.TotalHours, ts.Minutes);
+                string urlYoutube = filmApi.YoutubeKey != null ? $"https://www.youtube.com/watch?v={filmApi.YoutubeKey}" : "";
+
+                cmdInsert.Parameters.AddWithValue("@Titre", filmApi.Title);
+                cmdInsert.Parameters.AddWithValue("@Duree", dureeStr);
+                cmdInsert.Parameters.AddWithValue("@Annee", DateTime.Parse(dateSortie));
+                cmdInsert.Parameters.AddWithValue("@Pegi", filmApi.Pegi);
+                cmdInsert.Parameters.AddWithValue("@Poster", filmApi.FullPosterUrl); 
+                cmdInsert.Parameters.AddWithValue("@Synop", filmApi.Overview ?? "");
+                cmdInsert.Parameters.AddWithValue("@Youtube", urlYoutube);
+                cmdInsert.Parameters.AddWithValue("@Real", filmApi.Realisateur ?? "Inconnu");
+                cmdInsert.Parameters.AddWithValue("@Fond", filmApi.FullBackdropUrl);
 
                 int newFilmId = (int)(await cmdInsert.ExecuteScalarAsync() ?? 0);
 
