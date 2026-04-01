@@ -5,6 +5,7 @@
 @using watchflix.Repositories
 @inject TmdbService TmdbService
 @inject AdoFilm AdoFilmService 
+@inject NavigationManager Nav
 
 <style>
     /* --- 1. FONDS D'ÉCRAN --- */
@@ -26,24 +27,22 @@
     }
 
     /* --- 2. LAYOUT RESPONSIVE & CENTRAGE --- */
-    /* Utilisation de grid pour un centrage parfait et une gestion simplifiée */
     @@media (min-width: 992px) {
-        body { overflow: hidden; } /* Bloque le scroll navigateur sur PC */
+        body { overflow: hidden; } 
         .layout-wrapper {
             height: 100vh;
             width: 100vw;
-            display: grid; /* Grid est souvent plus robuste pour le centrage */
-            place-items: center; /* Centre verticalement et horizontalement */
+            display: grid; 
+            place-items: center; 
             padding: 20px;
-            box-sizing: border-box; /* Important pour que le padding ne s'ajoute pas à la largeur */
+            box-sizing: border-box; 
         }
         .glass-container {
-            height: 80vh; /* Hauteur fixe */
+            height: 80vh; 
             width: 100%;
             max-width: 1500px;
-            overflow-y: auto; /* Scroll interne */
+            overflow-y: auto; 
             scrollbar-width: none;
-            /* Flexibilité interne pour le contenu */
             display: flex; 
             flex-direction: column;
         }
@@ -124,10 +123,8 @@
     
     .floating-heart {
         position: absolute; color: #ff6b6b; font-size: 1.2rem;
-        /* Animation ajustée pour être visible même avec overflow: hidden sur le parent si possible, 
-           sinon on compte sur le z-index élevé */
         animation: floatUp 1s ease-out forwards; opacity: 0; pointer-events: none;
-        z-index: 1000; /* Très haut pour passer au-dessus de tout */
+        z-index: 1000; 
     }
     @@keyframes floatUp {
         0% { transform: translateY(0) scale(1); opacity: 1; }
@@ -135,26 +132,24 @@
         100% { transform: translateY(-40px) scale(1.5); opacity: 0; }
     }
 
-    /* --- 7. TOAST NOTIFICATION (RETOUR AU STYLE PILULE VERRE) --- */
+    /* --- 7. TOAST NOTIFICATION --- */
     .toast-container {
         position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
-        /* Style Verre Pilule */
-        background: rgba(30, 30, 30, 0.75); /* Un peu plus opaque pour la lisibilité */
+        background: rgba(30, 30, 30, 0.75); 
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
         border: 1px solid rgba(255, 255, 255, 0.15);
-        border-radius: 12px; /* Coins un peu moins ronds pour la barre en bas */
-        
+        border-radius: 12px; 
         box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         display: flex; flex-direction: column;
-        z-index: 20000; overflow: hidden; /* Important pour couper la barre en bas */
+        z-index: 20000; overflow: hidden; 
         animation: slideUp 0.3s ease-out;
         min-width: 350px;
     }
     
     .toast-content {
         display: flex; align-items: center; gap: 15px; 
-        padding: 15px 25px; /* Padding confortable */
+        padding: 15px 25px; 
         width: 100%;
     }
     
@@ -162,14 +157,12 @@
     .toast-success .toast-icon { color: #2ecc71; }
     .toast-text { color: white; font-weight: 500; font-size: 1rem; }
     
-    /* Barre de progression en bas */
     .progress-bar {
         height: 4px; width: 100%; background: rgba(255,255,255,0.1);
-        margin-top: 0; /* Pas de marge négative nécessaire si structuré en flex column */
+        margin-top: 0; 
     }
     .progress-fill {
         height: 100%; width: 100%;
-        /* Animation qui réduit la largeur de 100% à 0% */
         animation: progress 3s linear forwards;
     }
     .toast-success .progress-fill { background: #2ecc71; box-shadow: 0 0 10px #2ecc71; } 
@@ -188,6 +181,7 @@
     .movie-card {
         background: rgba(255, 255, 255, 0.05); border-radius: 16px; overflow: hidden;
         transition: 0.3s; border: 1px solid rgba(255,255,255,0.05); position: relative;
+        cursor: pointer;
     }
     .movie-card:hover { transform: translateY(-8px); box-shadow: 0 10px 20px rgba(0,0,0,0.3); border-color: rgba(255,255,255,0.2); }
     .movie-title-overlay {
@@ -236,12 +230,18 @@ else { <div class="movie-background" style="background-image: url('@filmSelectio
             <div class="d-flex flex-column h-100">
                 <div class="text-center mb-5">
                     <h2 class="display-5 fw-bold mb-4" style="text-shadow: 0 4px 10px rgba(0,0,0,0.5);">🎬 Recherche Films</h2>
-                    <div class="d-flex justify-content-center">
-                        <div class="search-pill">
+                    
+                    <div class="d-flex justify-content-center align-items-center gap-3 flex-wrap">
+                        <button class="glass-btn m-0" @onclick='() => Nav.NavigateTo("/admin/film")' style="padding: 10px 20px;">
+                            ⬅ Retour pannel admin
+                        </button>
+                        
+                        <div class="search-pill m-0">
                             <input @bind="nomDuFilm" @bind:event="oninput" @onkeypress="HandleEntree" class="search-input" placeholder="Titre du film (ex: Titanic)..." />
                             <button class="search-btn" @onclick="ChercherFilm">🔍</button>
                         </div>
                     </div>
+
                 </div>
 
                 @if (resultats != null)
