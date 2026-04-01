@@ -12,6 +12,7 @@ builder.Services.AddScoped<AdoArtiste>();
 builder.Services.AddScoped<AdoCategorie>();
 builder.Services.AddScoped<AdoUser>();
 builder.Services.AddScoped<AdoMusique>();
+builder.Services.AddScoped<YoutubeServiceOfficial>(provider => new YoutubeServiceOfficial("AIzaSyAVze5iCrB-gvjas-GKwoa5TVJ2EsESfUo"));
 
 var app = builder.Build();
 
