@@ -1,0 +1,317 @@
+@page "/details-film/{Id:int}"
+@rendermode InteractiveServer
+@using System.Threading.Tasks
+@using watchflix.Models
+@using watchflix.Repositories
+@inject NavigationManager Nav
+@inject IJSRuntime JS
+
+<style>
+    /* --- FOND DYNAMIQUE FLOUTÉ --- */
+    .details-bg {
+        position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+        background-size: cover; background-position: center;
+        filter: brightness(0.3) blur(20px); transform: scale(1.1);
+        z-index: -2;
+    }
+
+    /* --- ANIMATIONS D'ENTRÉE ET DE SORTIE --- */
+    .animate-enter {
+        animation: plongeonEntree 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    }
+    .animate-exit {
+        animation: reculSortie 0.4s cubic-bezier(0.5, 0, 0.2, 1) forwards;
+    }
+
+    @@keyframes plongeonEntree {
+        0% { opacity: 0; transform: scale(0.9) translateY(30px); }
+        100% { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    @@keyframes reculSortie {
+        0% { opacity: 1; transform: scale(1) translateY(0); }
+        100% { opacity: 0; transform: scale(0.9) translateY(-30px); }
+    }
+
+    /* --- CONTENEUR PRINCIPAL EN VERRE --- */
+    .glass-panel {
+        background: rgba(30, 30, 30, 0.6);
+        backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 25px;
+        max-width: 1350px; 
+        margin: 30px auto; 
+        padding: 30px 40px; 
+        display: flex; gap: 30px; 
+        box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        position: relative; z-index: 1; color: white;
+    }
+
+    /* --- BOUTON RETOUR --- */
+    .btn-retour {
+        background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+        color: white; padding: 8px 20px; border-radius: 50px; cursor: pointer;
+        transition: 0.2s; display: inline-flex; align-items: center; gap: 10px; font-weight: bold;
+        margin-bottom: 15px; font-size: 0.9rem;
+    }
+    .btn-retour:hover { background: rgba(255,255,255,0.2); transform: translateX(-5px); }
+
+    /* --- COLONNE GAUCHE (Affiche) --- */
+    .col-left { flex: 0 0 260px; }
+    .details-poster { width: 100%; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); }
+
+    /* --- COLONNE CENTRE (Infos) --- */
+    .col-center { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+    .details-title { font-size: 2.5rem; font-weight: bold; margin-bottom: 5px; }
+    .details-director { font-size: 1rem; color: rgba(255,255,255,0.7); margin-bottom: 15px; }
+    .director-name { color: white; font-weight: bold; }
+
+    /* Badges */
+    .badges-row { display: flex; gap: 15px; margin-bottom: 15px; }
+    .badge { 
+        background: rgba(0,0,0,0.4); padding: 5px 12px; border-radius: 8px; 
+        font-size: 0.85rem; font-weight: bold; display: flex; align-items: center; gap: 8px;
+        border: 1px solid rgba(255,255,255,0.1);
+    }
+    .badge.pegi { color: #ff5252; border-color: rgba(255, 82, 82, 0.3); }
+
+    /* Catégories */
+    .cat-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+    .cat-pill { 
+        background: rgba(46, 204, 113, 0.1); color: #2ecc71; border: 1px solid rgba(46, 204, 113, 0.3);
+        padding: 4px 12px; border-radius: 50px; font-size: 0.8rem; font-weight: bold;
+    }
+
+    /* Synopsis */
+    .synopsis-box { background: rgba(0,0,0,0.3); padding: 15px 20px; border-radius: 15px; margin-bottom: 20px; }
+    .synopsis-title { font-size: 0.85rem; letter-spacing: 2px; color: rgba(255,255,255,0.5); margin-bottom: 8px; }
+    .synopsis-text { line-height: 1.5; font-size: 0.95rem; color: rgba(255,255,255,0.9); }
+
+    /* Bouton Bande Annonce */
+    .actions-row { display: flex; margin-top: auto; }
+    .btn-trailer { 
+        width: 100%; padding: 12px; border-radius: 50px; font-weight: bold; cursor: pointer; transition: 0.2s;
+        display: flex; align-items: center; justify-content: center; gap: 10px; text-decoration: none;
+        background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.3);
+        font-size: 1.1rem;
+    }
+    .btn-trailer:hover { background: white; color: black; transform: scale(1.02); }
+    .btn-trailer:disabled { opacity: 0.5; cursor: not-allowed; transform: none; background: rgba(255,255,255,0.05); }
+
+    /* --- COLONNE DROITE (Musiques) --- */
+    .col-right { flex: 0 0 320px; background: rgba(0,0,0,0.2); padding: 20px; border-radius: 20px; display: flex; flex-direction: column;}
+    .music-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
+    .music-item { 
+        background: rgba(255,255,255,0.05); padding: 10px 12px; border-radius: 10px; margin-bottom: 8px;
+        display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: 0.2s;
+    }
+    .music-item:hover { background: rgba(255,255,255,0.1); }
+    .music-info { display: flex; flex-direction: column; }
+    .music-name { font-weight: bold; font-size: 0.9rem; }
+    .music-artist { font-size: 0.75rem; color: rgba(255,255,255,0.5); }
+
+    /* --- POPUP BANDE ANNONCE --- */
+    .trailer-modal-overlay {
+        position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+        background: rgba(0, 0, 0, 0.9); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+        display: flex; justify-content: center; align-items: center; z-index: 2000;
+        animation: fadeIn 0.3s ease forwards;
+    }
+    .trailer-modal-content {
+        width: 80%; max-width: 1000px; aspect-ratio: 16/9; position: relative;
+        background: black; border-radius: 15px; overflow: hidden; box-shadow: 0 10px 50px rgba(0,0,0,0.8);
+        animation: popUp 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    }
+    .trailer-modal-content iframe { width: 100%; height: 100%; border: none; }
+    .btn-close-modal {
+        position: absolute; top: -40px; right: 0; background: rgba(255,255,255,0.2); border: none;
+        color: white; width: 30px; height: 30px; border-radius: 50%; font-size: 1.2rem;
+        cursor: pointer; transition: 0.2s; display: flex; justify-content: center; align-items: center;
+    }
+    .btn-close-modal:hover { background: white; color: black; }
+
+    @@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @@keyframes popUp { from { transform: scale(0.8); } to { transform: scale(1); } }
+
+    /* RESPONSIVE */
+    @@media (max-width: 1024px) { .glass-panel { flex-direction: column; } .col-right { width: 100%; } .trailer-modal-content { width: 95%; } }
+</style>
+
+@if (filmActuel == null)
+{
+    <div class="loading-screen" style="display: flex; justify-content: center; align-items: center; height: 100vh;">
+        <h2 style="color: white;">Chargement de la fiche... 🎬</h2>
+    </div>
+}
+else
+{
+    <div class="details-bg" style="background-image: url('@GetBackdropUrl(filmActuel.Fond)');"></div>
+
+    <div class="layout-wrapper @(isExiting ? "animate-exit" : "animate-enter")" style="position: relative; z-index: 1;">
+        <div class="glass-panel">
+            
+            <div class="col-left">
+                <button class="btn-retour" @onclick="GoBackAvecAnimation">⬅ Retour</button>
+                <img src="@GetPosterUrl(filmActuel.Jacquette)" class="details-poster" alt="Affiche" />
+            </div>
+
+            <div class="col-center">
+                <h1 class="details-title">@filmActuel.Titre</h1>
+                <div class="details-director">Réalisé par <span class="director-name">@filmActuel.Realisateur</span></div>
+
+                <div class="badges-row">
+                    <div class="badge">📅 @FormatYear(filmActuel.Dte_sortie)</div>
+                    <div class="badge pegi">⚠️ PEGI @filmActuel.Pegi</div>
+                    <div class="badge">⏱️ @FormatDuration(filmActuel.Duree)</div>
+                </div>
+
+                <div class="cat-row">
+                    @foreach(var cat in categoriesDuFilm)
+                    {
+                        <span class="cat-pill">@cat</span>
+                    }
+                    @if(!categoriesDuFilm.Any()) { <span class="cat-pill">Aucune catégorie</span> }
+                </div>
+
+                <div class="synopsis-box">
+                    <div class="synopsis-title">SYNOPSIS</div>
+                    <div class="synopsis-text">
+                        @(string.IsNullOrWhiteSpace(filmActuel.Synopsys) ? "Aucun résumé disponible pour ce film." : filmActuel.Synopsys)
+                    </div>
+                </div>
+
+                <div class="actions-row">
+                    @if (!string.IsNullOrWhiteSpace(filmActuel.Bande_annonce))
+                    {
+                        <button class="btn-trailer" @onclick="OuvrirBandeAnnonce">▶ Bande Annonce</button>
+                    }
+                    else
+                    {
+                        <button class="btn-trailer" disabled>❌ Bande Annonce indisponible</button>
+                    }
+                </div>
+            </div>
+
+            <div class="col-right">
+                <div class="music-title">🎵 Bande Originale</div>
+                
+                @for (int i = 1; i <= 4; i++)
+                {
+                    <div class="music-item">
+                        <div class="music-info">
+                            <span class="music-name">Piste Musicale @i</span>
+                            <span class="music-artist">Artiste inconnu</span>
+                        </div>
+                        <span>▶</span>
+                    </div>
+                }
+                
+                <div style="text-align: center; margin-top: auto; font-size: 0.75rem; color: rgba(255,255,255,0.5); border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;">
+                    L'intégration des vraies musiques arrive bientôt !
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    @if (isTrailerOpen)
+    {
+        <div class="trailer-modal-overlay" @onclick="FermerBandeAnnonce">
+            <div class="trailer-modal-content" @onclick:stopPropagation="true">
+                <button class="btn-close-modal" @onclick="FermerBandeAnnonce">✖</button>
+                <iframe src="@GetYoutubeEmbedUrl(filmActuel.Bande_annonce)" allowfullscreen allow="autoplay"></iframe>
+            </div>
+        </div>
+    }
+}
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private Film filmActuel;
+    private List<string> categoriesDuFilm = new List<string>();
+    
+    private bool isExiting = false;
+    private bool isTrailerOpen = false;
+
+    protected override void OnInitialized()
+    {
+        filmActuel = AdoFilm.getFilmDetailsById(Id);
+
+        if (filmActuel != null)
+        {
+            var toutesLesCategories = AdoFilm.GetCategoriesParFilm();
+            if (toutesLesCategories.ContainsKey(Id))
+            {
+                categoriesDuFilm = toutesLesCategories[Id];
+            }
+        }
+    }
+
+    private async Task GoBackAvecAnimation()
+    {
+        isExiting = true; 
+        StateHasChanged(); 
+        
+        await Task.Delay(350); 
+        Nav.NavigateTo("/ma-videotheque"); 
+    }
+
+    private void OuvrirBandeAnnonce() => isTrailerOpen = true;
+    private void FermerBandeAnnonce() => isTrailerOpen = false;
+
+    private string GetYoutubeEmbedUrl(string url)
+    {
+        if (string.IsNullOrWhiteSpace(url)) return "";
+        try
+        {
+            var uri = new Uri(url);
+            var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+            var videoId = query["v"];
+            
+            if (!string.IsNullOrEmpty(videoId))
+            {
+                return $"https://www.youtube.com/embed/{videoId}?autoplay=1";
+            }
+        }
+        catch { }
+        
+        return url;
+    }
+
+    private string FormatYear(string dateStr)
+    {
+        if (string.IsNullOrWhiteSpace(dateStr) || dateStr == "N/A") return "Inconnue";
+        if (DateTime.TryParse(dateStr, out DateTime dt)) return dt.Year.ToString();
+        var match = System.Text.RegularExpressions.Regex.Match(dateStr, @"\d{4}");
+        return match.Success ? match.Value : dateStr;
+    }
+
+    private string FormatDuration(string dureeStr)
+    {
+        if (string.IsNullOrWhiteSpace(dureeStr) || dureeStr == "N/A") return "Inconnue";
+        if (TimeSpan.TryParse(dureeStr, out TimeSpan ts))
+        {
+            return ts.Hours > 0 ? $"{ts.Hours}h{ts.Minutes:D2}" : $"{ts.Minutes} min";
+        }
+        return dureeStr;
+    }
+
+    private string GetPosterUrl(string cheminImage)
+    {
+        if (string.IsNullOrWhiteSpace(cheminImage) || cheminImage == "N/A") return "https://via.placeholder.com/300x450/1e1e1e/ffffff?text=Affiche+Indisponible";
+        cheminImage = cheminImage.Trim();
+        if (cheminImage.StartsWith("http", StringComparison.OrdinalIgnoreCase)) return cheminImage;
+        if (cheminImage.StartsWith("/")) return $"https://image.tmdb.org/t/p/w500{cheminImage}"; 
+        return cheminImage;
+    }
+
+    private string GetBackdropUrl(string cheminFond)
+    {
+        if (string.IsNullOrWhiteSpace(cheminFond) || cheminFond == "N/A") return "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=2070&auto=format&fit=crop"; 
+        cheminFond = cheminFond.Trim();
+        if (cheminFond.StartsWith("http", StringComparison.OrdinalIgnoreCase)) return cheminFond;
+        if (cheminFond.StartsWith("/")) return $"https://image.tmdb.org/t/p/w1280{cheminFond}";
+        return cheminFond;
+    }
+}

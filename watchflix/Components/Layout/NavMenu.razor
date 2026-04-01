@@ -1,30 +1,229 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">watchflix</a>
+﻿@inject NavigationManager Nav
+@using watchflix.Models
+@using watchflix.Repositories
+@rendermode InteractiveServer
+
+<style>
+    /* --- BARRE DE NAVIGATION FLOTTANTE --- */
+    .glass-navbar {
+        position: fixed; top: 0; left: 0; width: 100%; height: 70px;
+        display: flex; justify-content: space-between; align-items: center; padding: 0 30px;
+        z-index: 1000; 
+        background: rgba(20, 20, 20, 0.6); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    /* --- GAUCHE : LOGO --- */
+    .nav-left { flex: 1; display: flex; align-items: center; }
+    .brand { color: white; font-size: 1.5rem; font-weight: bold; text-decoration: none; display: flex; align-items: center; gap: 10px; transition: transform 0.2s; }
+    .brand:hover { transform: scale(1.05); color: white; }
+
+    /* --- CENTRE : BARRE DE RECHERCHE --- */
+    .nav-center { flex: 2; display: flex; justify-content: center; position: relative; }
+    .search-wrapper { width: 100%; max-width: 600px; position: relative; }
+    .search-nav-pill {
+        width: 100%; padding: 10px 25px; border-radius: 50px; border: 1px solid rgba(255, 255, 255, 0.2);
+        background: rgba(40, 40, 40, 0.6); color: white; font-size: 1rem; outline: none; transition: 0.3s;
+    }
+    .search-nav-pill::placeholder { color: rgba(255, 255, 255, 0.6); }
+    .search-nav-pill:focus { background: rgba(60, 60, 60, 0.8); border-color: rgba(255, 255, 255, 0.5); box-shadow: 0 0 15px rgba(255, 255, 255, 0.1); }
+
+    /* --- POPUP RÉSULTATS (Style PLEX) --- */
+    .search-popup {
+        position: absolute; top: 110%; left: 0; width: 100%;
+        background: rgba(30, 30, 30, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+        overflow: hidden; display: flex; flex-direction: column; z-index: 1001;
+    }
+    
+    .popup-item {
+        display: flex; align-items: center; gap: 15px; padding: 10px 15px;
+        text-decoration: none; color: white; transition: 0.2s; border-bottom: 1px solid rgba(255,255,255,0.05);
+        cursor: pointer;
+    }
+    .popup-item:hover { background: rgba(255,255,255,0.1); }
+    
+    .popup-img { width: 40px; height: 60px; object-fit: cover; border-radius: 5px; }
+    .popup-info { display: flex; flex-direction: column; }
+    .popup-title { font-weight: bold; font-size: 1rem; }
+    .popup-year { font-size: 0.85rem; color: rgba(255,255,255,0.6); margin-top: 3px; }
+
+    .popup-footer {
+        padding: 10px; text-align: center; background: rgba(0,0,0,0.4); cursor: pointer;
+        color: #e5a00d; font-weight: bold; transition: 0.2s;
+    }
+    .popup-footer:hover { background: #e5a00d; color: black; }
+
+    /* --- DROITE : COMPTE & BOUTON --- */
+    .nav-right { flex: 1; display: flex; justify-content: flex-end; align-items: center; gap: 15px; }
+    .user-avatar { width: 40px; height: 40px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, 0.2); object-fit: cover; cursor: pointer; transition: 0.2s; }
+    .user-avatar:hover { border-color: white; transform: scale(1.1); }
+    .btn-login {
+        background: rgba(0, 123, 255, 0.4); border: 1px solid rgba(0, 123, 255, 0.6); color: white;
+        padding: 8px 20px; border-radius: 50px; font-weight: bold; cursor: pointer; transition: 0.3s; backdrop-filter: blur(5px);
+    }
+    .btn-login:hover { background: rgba(0, 123, 255, 0.7); transform: scale(1.05); box-shadow: 0 0 15px rgba(0, 123, 255, 0.4); }
+
+    @@media (max-width: 768px) {
+        .glass-navbar { padding: 0 15px; }
+        .brand span { display: none; } 
+        .search-nav-pill { padding: 8px 15px; font-size: 0.9rem; }
+        .btn-login { padding: 6px 12px; font-size: 0.85rem; }
+    }
+</style>
+
+<nav class="glass-navbar">
+    <div class="nav-left">
+        <a href="/ma-videotheque" class="brand">🎬 <span>WatchFlix</span></a>
     </div>
-</div>
 
-<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
+    <div class="nav-center">
+        <div class="search-wrapper">
+            <input type="text" class="search-nav-pill" placeholder="🔍 Rechercher un film..." 
+                   @bind="motCle" @bind:event="oninput" @onkeyup="HandleKeyUp" />
 
-<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
-    <nav class="nav flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
-            </NavLink>
+            @if (!IsOnMainPage && !string.IsNullOrWhiteSpace(motCle) && FilmsPopup != null)
+            {
+                <div class="search-popup">
+                    @if (FilmsPopup.Any())
+                    {
+                        @foreach (var film in FilmsPopup.Take(4)) 
+                        {
+                            <div class="popup-item" @onclick="() => VoirFiche(film.Id)">
+                                <img src="@GetPosterUrl(film.Jacquette)" class="popup-img" />
+                                <div class="popup-info">
+                                    <span class="popup-title">@film.Titre</span>
+                                    <span class="popup-year">
+                                        @FormatYear(film.Dte_sortie) 
+                                        @if(!string.IsNullOrEmpty(FormatDuration(film.Duree)))
+                                        {
+                                            <text> • @FormatDuration(film.Duree)</text>
+                                        }
+                                    </span> 
+                                </div>
+                            </div>
+                        }
+                        <div class="popup-footer" @onclick="VoirPlusDeResultats">
+                            Voir tous les résultats
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="popup-item" style="justify-content: center; color: rgba(255,255,255,0.5);">Aucun résultat trouvé</div>
+                    }
+                </div>
+            }
         </div>
+    </div>
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="counter">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Counter
-            </NavLink>
-        </div>
+    <div class="nav-right">
+        <img src="https://ui-avatars.com/api/?name=User&background=random&color=fff" alt="Profil" class="user-avatar" />
+        <button class="btn-login">Connexion</button>
+    </div>
+</nav>
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="weather">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
-            </NavLink>
-        </div>
-    </nav>
-</div>
+@code {
+    private string _motCle = "";
+    private List<Film> TousLesFilms = new();
+    
+    // Propriété intelligente : gère la saisie de texte
+    private string motCle
+    {
+        get => _motCle;
+        set
+        {
+            _motCle = value;
+            
+            // LA MAGIE EST ICI : On charge les films pour le popup UNIQUEMENT quand on tape un mot !
+            // Ça évite le crash au démarrage avec MaVideotheque
+            if (!IsOnMainPage && TousLesFilms.Count == 0 && !string.IsNullOrWhiteSpace(_motCle))
+            {
+                TousLesFilms = AdoFilm.getAll();
+            }
 
+            if (IsOnMainPage)
+            {
+                // Met à jour l'URL en direct (ex: /ma-videotheque?search=Shrek)
+                var uri = Nav.GetUriWithQueryParameter("search", _motCle);
+                Nav.NavigateTo(uri, forceLoad: false);
+            }
+        }
+    }
+
+    // Détecte si l'utilisateur est sur la page principale
+    private bool IsOnMainPage => Nav.Uri.EndsWith("/ma-videotheque") || Nav.Uri.Contains("/ma-videotheque?");
+
+    // Liste filtrée pour le popup
+    private IEnumerable<Film> FilmsPopup => TousLesFilms
+        .Where(f => f.Titre != null && f.Titre.Contains(_motCle, StringComparison.OrdinalIgnoreCase));
+
+    protected override void OnInitialized()
+    {
+        // On a retiré le AdoFilm.getAll() d'ici pour stopper le conflit !
+        Nav.LocationChanged += (s, e) => StateHasChanged(); 
+    }
+
+    // Si on appuie sur Entrée, on simule un clic sur "Voir plus"
+    private void HandleKeyUp(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && !IsOnMainPage)
+        {
+            VoirPlusDeResultats();
+        }
+    }
+
+    private void VoirPlusDeResultats()
+    {
+        // Redirige vers la page principale en passant le mot clé dans l'URL
+        Nav.NavigateTo($"/ma-videotheque?search={_motCle}");
+        _motCle = ""; // Vide le popup une fois redirigé
+    }
+
+    private void VoirFiche(int id)
+    {
+        // Redirection activée vers la page détails !
+        Nav.NavigateTo($"/details-film/{id}");
+        _motCle = ""; // Ferme le popup
+    }
+
+    // --- FONCTIONS DE FORMATAGE ---
+
+    // Extrait uniquement l'année d'une date (ex: "janv 1 2025 12:00AM" -> "2025")
+    private string FormatYear(string dateStr)
+    {
+        if (string.IsNullOrWhiteSpace(dateStr) || dateStr == "N/A") return "";
+        
+        if (DateTime.TryParse(dateStr, out DateTime dt)) return dt.Year.ToString();
+        
+        var match = System.Text.RegularExpressions.Regex.Match(dateStr, @"\d{4}");
+        if (match.Success) return match.Value;
+        
+        return dateStr;
+    }
+
+    // Formate la durée (ex: "01:44:00" -> "1h44")
+    private string FormatDuration(string dureeStr)
+    {
+        if (string.IsNullOrWhiteSpace(dureeStr) || dureeStr == "N/A") return "";
+        
+        if (TimeSpan.TryParse(dureeStr, out TimeSpan ts))
+        {
+            if (ts.Hours > 0)
+                return $"{ts.Hours}h{ts.Minutes:D2}";
+            else
+                return $"{ts.Minutes} min";
+        }
+        
+        return dureeStr;
+    }
+
+    private string GetPosterUrl(string cheminImage)
+    {
+        if (string.IsNullOrWhiteSpace(cheminImage) || cheminImage == "N/A") return "https://via.placeholder.com/300x450/1e1e1e/ffffff?text=Affiche+Indisponible";
+        cheminImage = cheminImage.Trim();
+        if (cheminImage.StartsWith("http", StringComparison.OrdinalIgnoreCase)) return cheminImage;
+        if (cheminImage.StartsWith("/")) return $"https://image.tmdb.org/t/p/w200{cheminImage}"; 
+        return cheminImage;
+    }
+}
