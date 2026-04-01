@@ -8,13 +8,15 @@ namespace watchflix.Repositories
 {
     internal class AdoFilm : Ado
     {
-        // --- 1. LECTURE (Sécurisée avec using) ---
-        public static List<Film> getAll()
-        {
-            List<Film> films = new List<Film>();
-            open();
-            // CORRECTION ICI : date_sortie au lieu de annee_sortie, et synopsys au lieu de synopsis
-            string query = "SELECT id_film, titre_film, pegi, jacquette, synopsys, bande_annonce, realisateur, fond, date_sortie, duree_film FROM Film";
+        // =====================================================================
+        // --- 1. MÉTHODES ORIGINALES (Conservées pour rétrocompatibilité) ---
+        // =====================================================================
+
+public static List<Film> getAll()
+{
+    List<Film> films = new List<Film>();
+    open();
+    string query = "SELECT id_film, titre_film, pegi, jacquette, synopsys, bande_annonce, realisateur, fond, date_sortie, duree_film FROM Film";
             
             SqlCommand cmd = new SqlCommand(query, connexion);
             SqlDataReader reader = cmd.ExecuteReader();
@@ -31,9 +33,9 @@ namespace watchflix.Repositories
                     reader.GetString(4), // synopsys
                     reader.GetString(5), // bande_annonce
                     reader.GetString(6), // realisateur
-                    reader.GetString(7),  // fond
-                    reader.GetString(8),  // fond
-                    reader.GetString(9)  // fond
+                    reader.GetString(7), // fond
+                    reader.GetString(8), // date_sortie
+                    reader.GetString(9)  // duree_film
 
                 ));
             }
@@ -42,7 +44,105 @@ namespace watchflix.Repositories
             return films;
         }
 
-        // --- RÉCUPÉRER LES CATÉGORIES DE CHAQUE FILM ---
+        public static List<Film> getOneById(int id)
+        {
+            List<Film> film = new List<Film>();
+            open();
+            SqlCommand cmd = new SqlCommand("SELECT * FROM Film WHERE id_film = @Id", connexion);
+            cmd.Parameters.AddWithValue("@Id", id);
+            SqlDataReader reader = cmd.ExecuteReader();
+            while (reader.Read()) 
+            { 
+                film.Add(new Film(reader.GetInt32(0), reader.GetString(1))); 
+            }
+            close();
+            return film;
+        }
+
+        public static List<Film> getOneByName(string titre)
+        {
+            List<Film> film = new List<Film>();
+            open();
+            SqlCommand cmd = new SqlCommand();
+            cmd.Connection = connexion;
+            cmd.CommandText = "SELECT * FROM Film WHERE titre_film LIKE @Titre";
+            cmd.Parameters.AddWithValue("@Titre", "%" + titre + "%");
+            
+            SqlDataReader reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                film.Add(new Film(reader.GetInt32(0), reader.GetString(1)));
+            }
+            close();
+            return film;
+        }
+
+        public static void delete(int Id_film)
+        {
+            open();
+            SqlCommand cmd = new SqlCommand();
+            cmd.Connection = connexion;
+
+            // Suppression des liaisons avec les musiques
+                    cmd.CommandText = "DELETE FROM film_musique WHERE id_film = @Id_film";
+            cmd.Parameters.Clear(); 
+                    cmd.Parameters.AddWithValue("@Id_film", Id_film);
+                    cmd.ExecuteNonQuery();
+
+            // Suppression des liaisons artistes/musiques orphelines
+                    cmd.CommandText = "DELETE am FROM artiste_musique am INNER JOIN Musique m ON m.id_musique = am.id_musique LEFT JOIN film_musique fm ON fm.id_musique = m.id_musique WHERE fm.id_musique IS NULL";
+                    cmd.Parameters.Clear();
+                    cmd.ExecuteNonQuery();
+
+            // Suppression des musiques orphelines
+                    cmd.CommandText = "DELETE FROM Musique WHERE NOT EXISTS (SELECT 1 FROM film_musique film WHERE film.id_musique = Musique.id_musique)";
+                    cmd.Parameters.Clear();
+                    cmd.ExecuteNonQuery();
+
+            // Suppression des liaisons avec les catégories
+                    cmd.CommandText = "DELETE FROM categorie_film WHERE id_film = @Id_film";
+                    cmd.Parameters.Clear();
+                    cmd.Parameters.AddWithValue("@Id_film", Id_film);
+                    cmd.ExecuteNonQuery();
+
+            // Suppression du film
+                    cmd.CommandText = "DELETE FROM Film WHERE id_film = @Id_film";
+                    cmd.Parameters.Clear();
+                    cmd.Parameters.AddWithValue("@Id_film", Id_film);
+                    cmd.ExecuteNonQuery();
+            
+            close();
+        }
+
+        public static void addMusicToFilm(int Id_film, int Id_musique)
+        {
+            open();
+            SqlCommand cmd = new SqlCommand();
+            cmd.Connection = connexion;
+            cmd.CommandText = "INSERT INTO film_musique VALUES (@Id_film, @Id_musique)";
+                    cmd.Parameters.AddWithValue("@Id_film", Id_film);
+                    cmd.Parameters.AddWithValue("@Id_musique", Id_musique);
+                    cmd.ExecuteNonQuery();
+            close();
+        }
+
+        public static void addCategorieToFilm(int Id_film, int Id_categorie)
+        {
+            open();
+            SqlCommand cmd = new SqlCommand();
+            cmd.Connection = connexion;
+            cmd.CommandText = "INSERT INTO categorie_film VALUES (@Id_film, @Id_categorie)";
+                    cmd.Parameters.AddWithValue("@Id_film", Id_film);
+                    cmd.Parameters.AddWithValue("@Id_categorie", Id_categorie);
+                    cmd.ExecuteNonQuery();
+            close();
+        }
+
+        // =====================================================================
+        // --- 2. NOUVELLES MÉTHODES (Isolées pour éviter la saturation du Pool)
+        // =====================================================================
+        
+        // Récupère les catégories associées aux films (Utilisé pour le filtrage)
         public static Dictionary<int, List<string>> GetCategoriesParFilm()
         {
             var dico = new Dictionary<int, List<string>>();
@@ -106,116 +206,36 @@ namespace watchflix.Repositories
                 }
             }
             return film;
-        }
+}
 
-        // --- AUTRES MÉTHODES ---
-
-        public static List<Film> getOneByName(string titre)
-        {
-            List<Film> film = new List<Film>();
-            open();
-            SqlCommand cmd = new SqlCommand();
-            cmd.Connection = connexion;
-            cmd.CommandText = "SELECT * FROM Film WHERE titre_film LIKE @Titre";
-            cmd.Parameters.AddWithValue("@Titre", "%" + titre + "%");
-            
-            SqlDataReader reader = cmd.ExecuteReader();
-
-            while (reader.Read())
-            {
-                film.Add(new Film(reader.GetInt32(0), reader.GetString(1)));
-            }
-            close();
-            return film;
-        }
- 
-
-        public static void delete(int Id_film)
-        {
-            using (SqlConnection localConnexion = new SqlConnection(cs))
-            {
-                localConnexion.Open();
-                using (SqlCommand cmd = new SqlCommand())
-                {
-                    cmd.Connection = localConnexion;
-
-                    cmd.CommandText = "DELETE FROM film_musique WHERE id_film = @Id_film";
-                    cmd.Parameters.AddWithValue("@Id_film", Id_film);
-                    cmd.ExecuteNonQuery();
-
-                    cmd.CommandText = "DELETE am FROM artiste_musique am INNER JOIN Musique m ON m.id_musique = am.id_musique LEFT JOIN film_musique fm ON fm.id_musique = m.id_musique WHERE fm.id_musique IS NULL";
-                    cmd.Parameters.Clear();
-                    cmd.ExecuteNonQuery();
-
-                    cmd.CommandText = "DELETE FROM Musique WHERE NOT EXISTS (SELECT 1 FROM film_musique film WHERE film.id_musique = Musique.id_musique)";
-                    cmd.Parameters.Clear();
-                    cmd.ExecuteNonQuery();
-
-                    cmd.CommandText = "DELETE FROM categorie_film WHERE id_film = @Id_film";
-                    cmd.Parameters.Clear();
-                    cmd.Parameters.AddWithValue("@Id_film", Id_film);
-                    cmd.ExecuteNonQuery();
-
-                    cmd.CommandText = "DELETE FROM Film WHERE id_film = @Id_film";
-                    cmd.Parameters.Clear();
-                    cmd.Parameters.AddWithValue("@Id_film", Id_film);
-                    cmd.ExecuteNonQuery();
-                }
-            }
-        }
-
-        public static void addMusicToFilm(int Id_film, int Id_musique)
-        {
-            using (SqlConnection localConnexion = new SqlConnection(cs))
-            {
-                localConnexion.Open();
-                using (SqlCommand cmd = new SqlCommand("INSERT INTO film_musique VALUES (@Id_film, @Id_musique)", localConnexion))
-                {
-                    cmd.Parameters.AddWithValue("@Id_film", Id_film);
-                    cmd.Parameters.AddWithValue("@Id_musique", Id_musique);
-                    cmd.ExecuteNonQuery();
-                }
-            }
-        }
-
-        public static void addCategorieToFilm(int Id_film, int Id_categorie)
-        {
-            open();
-            SqlCommand cmd = new SqlCommand();
-            cmd.Connection = connexion;
-            cmd.CommandText = "INSERT INTO film_musique VALUES (@Id_film, @Id_categorie)";
-            cmd.Parameters.AddWithValue("@Id_film", Id_film);
-            cmd.Parameters.AddWithValue("@Id_categorie", Id_categorie);
-            cmd.ExecuteNonQuery();
-            close();
-        }
 
         // --- 3. ÉCRITURE DANS LA BDD ---
         public static async Task<bool> addFilmWhithApi(MovieDetails filmApi)
         {
-            using (SqlConnection localConnexion = new SqlConnection(cs))
+            try 
             {
-                await localConnexion.OpenAsync();
+                open();
 
-                // A. Vérif doublon
+                // Vérification des doublons
                 string queryCheck = "SELECT COUNT(*) FROM Film WHERE titre_film = @Titre";
-                using (SqlCommand cmdCheck = new SqlCommand(queryCheck, localConnexion))
-                {
+                SqlCommand cmdCheck = new SqlCommand(queryCheck, connexion);
                     cmdCheck.Parameters.AddWithValue("@Titre", filmApi.Title);
+                
                     int count = (int)(await cmdCheck.ExecuteScalarAsync() ?? 0);
-                    if (count > 0) return false; // LE FILM EXISTE DÉJÀ
+                if (count > 0) 
+                { 
+                    close();
+                    return false; 
                 }
 
-                // B. Insertion Film
+                // Insertion du nouveau film
                 string queryInsert = @"
                     INSERT INTO Film (titre_film, duree_film, date_sortie, pegi, jacquette, synopsys, bande_annonce, realisateur, fond)
                     OUTPUT INSERTED.id_film 
                     VALUES (@Titre, @Duree, @Annee, @Pegi, @Poster, @Synop, @Youtube, @Real, @Fond)";
+                SqlCommand cmdInsert = new SqlCommand(queryInsert, connexion);
 
-                int newFilmId = 0;
-
-                using (SqlCommand cmdInsert = new SqlCommand(queryInsert, localConnexion))
-                {
+                // Formatage des données spécifiques (Dates et Durées)
                     string dateSortie = string.IsNullOrEmpty(filmApi.AnneeSortie) ? "2000-01-01" : $"{filmApi.AnneeSortie}-01-01";
                     TimeSpan ts = TimeSpan.FromMinutes(filmApi.Runtime);
                     string dureeStr = string.Format("{0:00}:{1:00}:00", (int)ts.TotalHours, ts.Minutes);
@@ -231,45 +251,42 @@ namespace watchflix.Repositories
                     cmdInsert.Parameters.AddWithValue("@Real", filmApi.Realisateur ?? "Inconnu");
                     cmdInsert.Parameters.AddWithValue("@Fond", filmApi.FullBackdropUrl);
 
-                    newFilmId = (int)(await cmdInsert.ExecuteScalarAsync() ?? 0);
-                }
+                int newFilmId = (int)(await cmdInsert.ExecuteScalarAsync() ?? 0);
 
-                // C. Catégories
+                // Insertion des liaisons avec les catégories
                 foreach (var genre in filmApi.Genres)
                 {
                     string checkCat = "SELECT id_categorie FROM Categorie WHERE libelle = @NomCat";
-                    int idCategorie = 0;
-
-                    using (SqlCommand cmdCatCheck = new SqlCommand(checkCat, localConnexion))
+                    SqlCommand cmdCatCheck = new SqlCommand(checkCat, connexion);
+                    cmdCatCheck.Parameters.AddWithValue("@NomCat", genre.Name);
+                
+                    object? result = await cmdCatCheck.ExecuteScalarAsync();
+                    int idCategorie;
+                    
+                    if (result != null)
                     {
-                        cmdCatCheck.Parameters.AddWithValue("@NomCat", genre.Name);
-                        object? result = await cmdCatCheck.ExecuteScalarAsync();
-                        
-                        if (result != null)
-                        {
-                            idCategorie = (int)result;
-                        }
-                        else
-                        {
-                            string insertCat = "INSERT INTO Categorie (libelle) OUTPUT INSERTED.id_categorie VALUES (@NomCat)";
-                            using (SqlCommand cmdCatInsert = new SqlCommand(insertCat, localConnexion))
-                            {
-                                cmdCatInsert.Parameters.AddWithValue("@NomCat", genre.Name);
-                                idCategorie = (int)(await cmdCatInsert.ExecuteScalarAsync() ?? 0);
-                            }
-                        }
+                        idCategorie = (int)result;
                     }
+                    else
+                    {
+                        string insertCat = "INSERT INTO Categorie (libelle) OUTPUT INSERTED.id_categorie VALUES (@NomCat)";
+                        SqlCommand cmdCatInsert = new SqlCommand(insertCat, connexion);
+                            cmdCatInsert.Parameters.AddWithValue("@NomCat", genre.Name);
+                            idCategorie = (int)(await cmdCatInsert.ExecuteScalarAsync() ?? 0);
+                }
 
                     string insertLien = "INSERT INTO categorie_film (id_film, id_categorie) VALUES (@IdFilm, @IdCat)";
-                    using (SqlCommand cmdLien = new SqlCommand(insertLien, localConnexion))
-                    {
+                    SqlCommand cmdLien = new SqlCommand(insertLien, connexion);
                         cmdLien.Parameters.AddWithValue("@IdFilm", newFilmId);
                         cmdLien.Parameters.AddWithValue("@IdCat", idCategorie);
                         await cmdLien.ExecuteNonQueryAsync();
-                    }
                 }
 
                 return true; 
+            }
+            finally
+            {
+                close();
             }
         }
     }
