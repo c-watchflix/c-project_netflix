@@ -16,21 +16,22 @@ namespace watchflix.Models
         private string? couverture;
 
         // Constructeurs
-        public Musique(int id, string titre, TimeSpan duree, string album, string couverture)
+        public Musique(int Id, string Titre, TimeSpan Duree, string Album, string Couverture)
         {
-            this.id = id;
-            this.titre = titre;
-            this.duree = duree;
-            this.album = album;
-            this.couverture = couverture;
+            this.id = Id;
+            this.Titre = Titre;
+            this.Duree = Duree;
+            this.Album = Album;
+            this.Couverture = Couverture;
         }
 
-        public Musique(string titre, TimeSpan duree, string album, string couverture)
+        public Musique(string Titre, TimeSpan Duree, string Album, string Couverture)
         {
-            this.titre = titre;
-            this.duree = duree;
-            this.album = album;
-            this.couverture = couverture;
+            this.id = 0;
+            this.Titre = Titre;
+            this.Duree = Duree;
+            this.Album = Album;
+            this.Couverture = Couverture;
         }
 
         public Musique(int id, string titre)
