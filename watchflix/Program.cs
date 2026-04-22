@@ -1,5 +1,6 @@
 using watchflix.Components;
 using watchflix.Repositories;
+using Microsoft.EntityFrameworkCore;
 using watchflix.Services;
 using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
 using Microsoft.AspNetCore.Components.Authorization;
