@@ -67,7 +67,7 @@
     private void GetOneByName()
     {
         var musique = new Musique(0, "hello");
-        AdoMusique.GetOneByName(musique);
+        AdoMusique.GetAllByTitle(Titre: musique.Titre);
         oneByName = new List<Musique> { musique };
     }
 

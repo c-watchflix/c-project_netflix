@@ -1,0 +1,47 @@
+@page "/testapimusic"
+@inject YoutubeServiceOfficial YoutubeService
+@rendermode InteractiveServer
+@using watchflix.Models
+
+<h3>Test API Musique</h3>
+
+<input @bind="movieTitle" placeholder="Tapez un film..." />
+<button @onclick="RechercherMusique">Rechercher OST</button>
+
+@if (foundMusic != null)
+{
+    <div class="music-result">
+        <img src="@foundMusic.Couverture" alt="Couverture" style="width:200px; height:auto;" />
+        <h4>@foundMusic.Titre</h4>
+        <p><strong>Durée :</strong> @foundMusic.Duree</p>
+        <p><strong>Album :</strong> @foundMusic.Album</p>
+        <p><strong>Lien :</strong> <a href="@musicLink" target="_blank">@musicLink</a></p>
+        <button @onclick="SaveMusic" class="btn btn-success">💾 Sauvegarder en base</button>
+    </div>
+}
+
+@code {
+    private string movieTitle = "";
+    private string musicLink = "";
+    private Musique foundMusic = null;
+    private bool isSaved = false;
+
+    private async Task RechercherMusique()
+    {
+        musicLink = await YoutubeService.GetMusicLinkForMovieAsync(movieTitle);
+        foundMusic = await YoutubeService.GetMusicDetailsAsync(movieTitle);
+    }
+
+    private async Task SaveMusic()
+    {
+        isSaved = await YoutubeService.SaveToDatabaseAsync(foundMusic);
+            if (isSaved)
+            {
+                Console.WriteLine("Musique sauvegardée avec succès !");
+            }
+            else
+            {
+                Console.WriteLine("Erreur lors de la sauvegarde de la musique.");
+            }
+    }
+}
