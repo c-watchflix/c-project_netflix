@@ -35,5 +35,13 @@
     private async Task SaveMusic()
     {
         isSaved = await YoutubeService.SaveToDatabaseAsync(foundMusic);
+            if (isSaved)
+            {
+                Console.WriteLine("Musique sauvegardée avec succès !");
+            }
+            else
+            {
+                Console.WriteLine("Erreur lors de la sauvegarde de la musique.");
+            }
     }
 }

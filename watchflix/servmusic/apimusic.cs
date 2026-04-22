@@ -110,16 +110,15 @@ public class YoutubeServiceOfficial
     await connection.OpenAsync();
     
     string query = @"
-        INSERT INTO Musique (titre_musique, duree_musique, album, couverture, youtube_id, id_musique) 
-        VALUES (@titre, @duree, @album, @couverture, @youtube_id, @id_musique)";
-    
+        INSERT INTO Musique (titre_musique, duree_musique, album, couverture, youtube_id)
+        VALUES (@titre, @duree, @album, @couverture, @youtube_id)";
+
     using var command = new SqlCommand(query, connection);
     command.Parameters.AddWithValue("@titre", musique.Titre ?? "");
     command.Parameters.AddWithValue("@duree", musique.Duree);
     command.Parameters.AddWithValue("@album", musique.Album ?? "");
     command.Parameters.AddWithValue("@couverture", musique.Couverture ?? "");
     command.Parameters.AddWithValue("@youtube_id", musique.IdYoutube ?? "");
-    command.Parameters.AddWithValue("@id_musique", musique.Id);
     
     int rowsAffected = await command.ExecuteNonQueryAsync();
     return rowsAffected > 0;
