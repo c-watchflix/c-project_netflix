@@ -118,7 +118,9 @@
     </div>
 
     <div class="nav-right">
-        <img src="https://ui-avatars.com/api/?name=User&background=random&color=fff" alt="Profil" class="user-avatar" />
+        <button class="user-avatar-btn" @onclick="GoToProfile"  title="Voir mon profil">
+            <img src="https://ui-avatars.com/api/?name=User&background=random&color=fff" alt="Profil" class="user-avatar" />
+        </button>
         <button class="btn-login">Connexion</button>
     </div>
 </nav>
@@ -225,5 +227,10 @@
         if (cheminImage.StartsWith("http", StringComparison.OrdinalIgnoreCase)) return cheminImage;
         if (cheminImage.StartsWith("/")) return $"https://image.tmdb.org/t/p/w200{cheminImage}"; 
         return cheminImage;
+    }
+
+    private void GoToProfile()
+    {
+        Nav.NavigateTo("/profil");
     }
 }

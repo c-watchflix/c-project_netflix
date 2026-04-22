@@ -1,0 +1,208 @@
+@page "/profil"
+@rendermode InteractiveServer
+@using watchflix.Models
+@using watchflix.Repositories
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
+@inject NavigationManager Nav
+@inject watchflix.Services.Authentification Authentification
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@using Microsoft.AspNetCore.Authorization
+
+@attribute [Authorize]
+
+<PageTitle>Mon Profil</PageTitle>
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Mon Profil</h4>
+                </div>
+                <div class="card-body">
+                    @if (!string.IsNullOrEmpty(ErrorMessage))
+                    {
+                        <div class="alert alert-danger">
+                            <strong>Erreur:</strong>
+                            <pre style="white-space: pre-wrap; word-wrap: break-word;">@ErrorMessage</pre>
+                        </div>
+                    }
+
+                    @if (CurrentUser != null)
+                    {
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Prénom</label>
+                                <p class="form-control-static">@CurrentUser.Prenom</p>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Nom</label>
+                                <p class="form-control-static">@CurrentUser.Nom</p>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Pseudo</label>
+                                <p class="form-control-static">@CurrentUser.Pseudo</p>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Courrier</label>
+                                <p class="form-control-static">@CurrentUser.Courriel</p>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Statut</label>
+                                <p class="form-control-static">
+                                    @if (CurrentUser.Is_admin)
+                                    {
+                                        <span class="badge bg-danger">Administrateur</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-info">Utilisateur</span>
+                                    }
+                                </p>
+                            </div>
+                        </div>
+
+                        <hr />
+
+                        <div class="mt-4">
+                            <button class="btn btn-danger" @onclick="ShowDeleteConfirmation">
+                                <i class="bi bi-trash"></i> Supprimer mon compte
+                            </button>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-warning">Impossible de charger les informations de l'utilisateur.</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmation -->
+<div class="modal @(ShowDeleteModal ? "show d-block" : "")" tabindex="-1" role="dialog" style="background-color: @(ShowDeleteModal ? "rgba(0, 0, 0, 0.5)" : "transparent");">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Confirmer la suppression</h5>
+                <button type="button" class="btn-close btn-close-white" @onclick="HideDeleteConfirmation"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-danger fw-bold">Êtes-vous sûr de vouloir supprimer votre compte ?</p>
+                <p>Cette action est <strong>irréversible</strong> et supprimera tous vos données de notre base de données.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" @onclick="HideDeleteConfirmation">Annuler</button>
+                <button type="button" class="btn btn-danger" @onclick="DeleteUserAccount" disabled="@isDeleting">
+                    @if (isDeleting)
+                    {
+                        <span>Suppression en cours...</span>
+                    }
+                    else
+                    {
+                        <span>Supprimer définitivement</span>
+                    }
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private User? CurrentUser;
+    private bool ShowDeleteModal = false;
+    private bool isDeleting = false;
+    private string ErrorMessage = string.Empty;
+    private string DebugInfo = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+
+            DebugInfo += $"Authenticated: {user?.Identity?.IsAuthenticated}\n";
+
+            if (user?.Identity?.IsAuthenticated == true)
+            {
+                var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier);
+                var nameClaim = user.FindFirst(ClaimTypes.Name);
+                
+                DebugInfo += $"Name: {nameClaim?.Value}\n";
+                DebugInfo += $"UserID Claim: {userIdClaim?.Value}\n";
+
+                // Si pas d'ID dans les claims, chercher par pseudo
+                if (userIdClaim == null && nameClaim != null)
+                {
+                    var usersByPseudo = await Task.Run(() => AdoUser.getOneByPseudo(nameClaim.Value));
+                    CurrentUser = usersByPseudo.FirstOrDefault();
+                    DebugInfo += $"Found by pseudo: {CurrentUser?.Pseudo}\n";
+                }
+                else if (userIdClaim != null && int.TryParse(userIdClaim.Value, out int userId))
+                {
+                    var users = await Task.Run(() => AdoUser.getOneById(userId));
+                    CurrentUser = users.FirstOrDefault();
+                    DebugInfo += $"Found by ID {userId}: {CurrentUser?.Pseudo}\n";
+                }
+            }
+            else
+            {
+                ErrorMessage = "Vous n'êtes pas authentifié.";
+            }
+
+            if (CurrentUser == null)
+            {
+                ErrorMessage = $"Impossible de charger l'utilisateur. {DebugInfo}";
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Erreur lors du chargement du profil: {ex.Message}\n{ex.StackTrace}";
+        }
+    }
+
+    private void ShowDeleteConfirmation()
+    {
+        ShowDeleteModal = true;
+    }
+
+    private void HideDeleteConfirmation()
+    {
+        ShowDeleteModal = false;
+        ErrorMessage = string.Empty;
+    }
+
+    private async Task DeleteUserAccount()
+    {
+        if (CurrentUser == null)
+            return;
+
+        try
+        {
+            isDeleting = true;
+
+            // Suppression de l'utilisateur de la base de données
+            await Task.Run(() => AdoUser.delete(CurrentUser.Id));
+
+            // Réinitialiser l'utilisateur authentifié
+            Authentification.SetCurrentUser(null);
+
+            // Rediriger vers la page de connexion
+            Nav.NavigateTo("/login", forceLoad: true);
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Erreur lors de la suppression : {ex.Message}";
+            isDeleting = false;
+        }
+    }
+}

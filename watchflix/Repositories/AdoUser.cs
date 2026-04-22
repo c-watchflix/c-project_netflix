@@ -91,6 +91,27 @@ namespace watchflix.Repositories
             return users;
         }
 
+        public static List<User> getOneByPseudo(string Pseudo)
+        {
+            List<User> users = new List<User>();
+            open();
+            SqlCommand cmd = new SqlCommand();
+            cmd.Connection = connexion;
+            cmd.CommandText = "SELECT * FROM Utilisateur WHERE pseudo = @Pseudo";
+            cmd.Parameters.AddWithValue("@Pseudo", Pseudo);
+            cmd.ExecuteNonQuery();
+
+            SqlDataReader reader = cmd.ExecuteReader();
+
+            while (reader.Read())
+            {
+                users.Add(new User(reader.GetInt32(0), reader.GetString(1), reader.GetString(2), reader.GetString(3), reader.GetString(4), reader.GetString(5), reader.GetBoolean(6)));
+            }
+
+            close();
+            return users;
+        }
+
         public static List<User> search(string Search)
         {
             List<User> users = new List<User>();
