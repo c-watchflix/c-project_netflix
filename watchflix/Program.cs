@@ -1,5 +1,6 @@
 using watchflix.Components;
 using watchflix.Repositories;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 

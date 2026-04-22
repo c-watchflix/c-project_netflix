@@ -9,6 +9,11 @@ using watchflix.Models;
 namespace watchflix.Repositories; 
     public class AdoCategorie : Ado
     {
+        public AdoCategorie(IConfiguration _configuration) : base(_configuration)
+        {
+            Configuration = _configuration;
+            cs = Configuration.GetConnectionString("DefaultConnection");
+        }
         public static void CreateCategorie(Categorie uneCategorie)
         {
             open();
