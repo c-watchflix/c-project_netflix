@@ -1,0 +1,94 @@
+@page "/login"
+@rendermode InteractiveServer
+
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Components.Forms
+
+@inject NavigationManager NavigationManager
+@inject HttpClient HttpClient
+
+<h3>Connexion</h3>
+
+<EditForm Model="@loginModel" OnValidSubmit="HandleLogin">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="mb-3">
+        <label>Pseudo</label>
+        <InputText class="form-control"
+                   @bind-Value="loginModel.Pseudo" />
+    </div>
+
+    <div class="mb-3">
+        <label>Mot de passe</label>
+        <InputText class="form-control"
+                   type="password"
+                   @bind-Value="loginModel.Password" />
+    </div>
+
+    <button type="submit" class="btn btn-primary" disabled="@isLoading">
+        @if (isLoading)
+        {
+            <span>Connexion en cours...</span>
+        }
+        else
+        {
+            <span>Se connecter</span>
+        }
+    </button>
+</EditForm>
+
+@if (!string.IsNullOrWhiteSpace(ErrorMessage))
+{
+    <p class="text-danger mt-3">@ErrorMessage</p>
+}
+
+@code {
+    private LoginModel loginModel = new();
+    private string ErrorMessage = string.Empty;
+    private bool isLoading = false;
+
+    private async Task HandleLogin()
+    {
+        ErrorMessage = string.Empty;
+        isLoading = true;
+
+        try
+        {
+            var json = System.Text.Json.JsonSerializer.Serialize(loginModel);
+            var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+            
+            Console.WriteLine($"Attempting login with pseudo: {loginModel.Pseudo}");
+            var response = await HttpClient.PostAsync("https://localhost:7275/api/auth/login", content);
+            Console.WriteLine($"Response status: {response.StatusCode}");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"Error response: {errorContent}");
+                ErrorMessage = "Pseudo ou mot de passe incorrect.";
+                isLoading = false;
+                return;
+            }
+
+            Console.WriteLine("Login successful, redirecting...");
+            // Force le rechargement de la page pour que le cookie soit reconnu
+            NavigationManager.NavigateTo("/", true);
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Erreur lors de la connexion: {ex.Message}";
+            Console.Error.WriteLine($"Exception: {ex}");
+            isLoading = false;
+        }
+    }
+
+    public class LoginModel
+    {
+        [Required(ErrorMessage = "Le pseudo est obligatoire")]
+        public string Pseudo { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Le mot de passe est obligatoire")]
+        public string Password { get; set; } = string.Empty;
+    }
+}
