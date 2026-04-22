@@ -14,13 +14,13 @@
 <button class="btn btn-primary" @onclick="Delete">delete 1</button>
 
     
-@if (data != null) //si la liste data n'est pas vide
+@if (data != null) 
 {
     <h1>Tous les films</h1>
     <ul>
-        @foreach (var film in data) // alors pour chaque catégorie présente dans la liste
+        @foreach (var film in data) 
         {
-            <li>@film.Titre</li> // je vais faire une ligne
+            <li>@film.Titre</li> 
         }
     </ul>
 }
@@ -29,10 +29,7 @@
 {
     <h1>Selection d'un film</h1>
     <ul>
-        @foreach (var film in oneByID)
-        {
-            <li>@film.Titre</li>
-        }
+        <li>@oneByID.Titre</li>
     </ul>
 }
 
@@ -49,7 +46,7 @@
 
 @code {
     IEnumerable<Film>? data;
-    IEnumerable<Film>? oneByID;
+    Film? oneByID; // <--- CORRECTION : C'est maintenant un seul 'Film', plus une 'IEnumerable'
     IEnumerable<Film>? oneByName;
 
     private void GetAll()
@@ -59,7 +56,8 @@
 
     private void GetOneByID()
     {
-        oneByID = AdoFilm.getOneById(5);
+        // <--- CORRECTION : On appelle le nouveau nom de la méthode !
+        oneByID = AdoFilm.getFilmDetailsById(5); 
     }
 
     private void GetOneByName()
@@ -71,6 +69,4 @@
     {
         AdoFilm.delete(1);
     }
-
-
 }

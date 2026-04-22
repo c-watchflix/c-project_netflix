@@ -1,0 +1,76 @@
+@page "/admin/user.update/{Id:int}"
+@rendermode InteractiveServer
+@using watchflix.Models
+@using watchflix.Repositories
+@inject AdoUser Repo
+@inject NavigationManager Navigation
+
+<PageTitle>User Update</PageTitle>
+
+<h5>Modification de l'utilisateur</h5>
+
+@if(user != null)
+{
+  <form>
+      <div class="mb-3">
+          <label class="form-label">Nom</label>
+          <input class="form-control" @bind="user.Nom" />
+      </div>
+
+      <div class="mb-3">
+          <label class="form-label">Prénom</label>
+          <input class="form-control" @bind="user.Prenom" />
+      </div>
+
+      <div class="mb-3">
+          <label class="form-label">Email</label>
+          <input type="email" class="form-control" @bind="user.Courriel" />
+      </div>
+
+      <div class="mb-3">
+          <label class="form-label">Pseudo</label>
+          <input class="form-control" @bind="user.Pseudo" />
+      </div>
+
+      <div class="mb-3">
+          <label class="form-label">Mot de passe</label>
+          <input type="password" class="form-control" @bind="user.Mdp" />
+      </div>
+
+      <div class="mb-3 form-check">
+          <input type="checkbox" class="form-check-input" @bind="user.Is_admin" />
+          <label class="form-check-label">Admin</label>
+      </div>
+
+      <button type="button" class="btn btn-primary" @onclick="update">
+          Envoyer
+      </button>
+  </form>
+}
+else
+{
+    <p>Chargement...</p>
+}
+
+@code {
+
+    @code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private User? user;
+
+    protected override void OnInitialized()
+    {
+        user = AdoUser.getOneById(Id)?.FirstOrDefault();
+    }
+
+    private void update()
+    {
+        AdoUser.update(user!);
+        Navigation.NavigateTo("/admin/user");
+    }
+}
+
+
+}

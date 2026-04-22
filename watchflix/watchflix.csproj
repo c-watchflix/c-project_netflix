@@ -9,6 +9,7 @@
   <ItemGroup>
     <PackageReference Include="Google.Apis.YouTube.v3" Version="1.73.0.4029" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.3" />
+    <PackageReference Include="RestSharp" Version="113.1.0" />
   </ItemGroup>
 
 </Project>
