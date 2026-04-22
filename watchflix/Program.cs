@@ -1,5 +1,9 @@
 using watchflix.Components;
 using watchflix.Repositories;
+using watchflix.Services;
+using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
+using Microsoft.AspNetCore.Components.Authorization;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,6 +19,24 @@ builder.Services.AddScoped<AdoMusique>();
 builder.Services.AddScoped<YoutubeServiceOfficial>(provider => new YoutubeServiceOfficial("AIzaSyAVze5iCrB-gvjas-GKwoa5TVJ2EsESfUo"));
 builder.Services.AddScoped<watchflix.Services.TmdbService>();
 
+builder.Services.AddAuthorizationCore();
+builder.Services.AddScoped<Authentification>();
+builder.Services.AddScoped<ProtectedSessionStorage>();
+builder.Services.AddScoped<CustomAuthenticationStateProvider>();
+builder.Services.AddScoped<AuthenticationStateProvider>(sp => sp.GetRequiredService<CustomAuthenticationStateProvider>());
+
+builder.Services.AddControllers();
+
+builder.Services.AddHttpClient();
+
+builder.Services.AddAuthentication("Cookies")
+    .AddCookie("Cookies", options =>
+    {
+        options.LoginPath = "/login";
+    });
+
+builder.Services.AddAuthorization();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -27,10 +49,15 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.UseAntiforgery();
 
+app.MapControllers();
+
 app.MapStaticAssets();
+
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 

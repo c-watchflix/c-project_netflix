@@ -1,7 +1,40 @@
 ﻿@page "/"
+@rendermode InteractiveServer
+
+@inject NavigationManager NavigationManager
+@inject HttpClient HttpClient
 
 <PageTitle>Home</PageTitle>
 
 <h1>Hello, world!</h1>
 
 Welcome to your new app.
+
+<button class="btn btn-danger" @onclick="Logout">Déconnexion</button>
+
+@if (!string.IsNullOrEmpty(Message))
+{
+    <p class="text-danger">@Message</p>
+}
+
+@code {
+    private string Message = string.Empty;
+
+    private async Task Logout()
+    {
+        Message = "Déconnexion en cours...";
+        
+        try
+        {
+            var response = await HttpClient.PostAsync("https://localhost:7275/api/auth/logout", null);
+            Message = $"Response: {response.StatusCode}";
+            
+            await Task.Delay(300);
+            NavigationManager.NavigateTo("/login", forceLoad: true);
+        }
+        catch (Exception ex)
+        {
+            Message = $"Erreur : {ex.Message}";
+        }
+    }
+}
