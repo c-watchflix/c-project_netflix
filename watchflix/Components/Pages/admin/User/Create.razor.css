@@ -1,0 +1,109 @@
+/* --- ARRIÈRE-PLAN --- */
+.dashboard-bg {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    background-color: #141414; /* Fond par défaut sombre */
+    background-image: url('https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=2070&auto=format&fit=crop');
+    background-size: cover; background-position: center;
+    filter: brightness(0.35) blur(8px);
+    z-index: 0; pointer-events: none;
+}
+
+/* --- CONTENEUR GLOBAL --- */
+.form-container {
+    padding: 40px;
+    color: white;
+    max-width: 900px; /* Plus petit que le tableau pour centrer le formulaire */
+    margin: 40px auto;
+    position: relative;
+    z-index: 1;
+    animation: fadeIn 0.5s ease-out;
+}
+
+/* --- CARTE EN VERRE --- */
+.glass-panel {
+    background: rgba(20, 20, 20, 0.6);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 40px 50px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+}
+
+/* --- CHAMPS DE FORMULAIRE --- */
+.glass-label {
+    color: rgba(255, 255, 255, 0.8);
+    font-weight: 600;
+    margin-bottom: 8px;
+    display: block;
+    letter-spacing: 0.5px;
+}
+
+.glass-input {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: white;
+    border-radius: 12px;
+    padding: 12px 20px;
+    transition: all 0.3s ease;
+    width: 100%;
+}
+
+.glass-input:focus {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: #3498db;
+    box-shadow: 0 0 15px rgba(52, 152, 219, 0.3);
+    outline: none;
+}
+
+/* Style de la checkbox Admin pour le thème sombre */
+.form-check-input {
+    background-color: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.3);
+    width: 20px; height: 20px;
+    cursor: pointer;
+}
+.form-check-input:checked {
+    background-color: #2ecc71;
+    border-color: #2ecc71;
+}
+.form-check-label {
+    margin-left: 10px; cursor: pointer; font-weight: 600; margin-top: 2px;
+}
+
+/* --- BOUTONS --- */
+.btn-glass-submit {
+    background: rgba(46, 204, 113, 0.15);
+    border: 1px solid rgba(46, 204, 113, 0.3);
+    color: #2ecc71;
+    padding: 12px 35px;
+    border-radius: 50px;
+    font-weight: bold;
+    transition: 0.3s;
+    cursor: pointer;
+}
+.btn-glass-submit:hover {
+    background: #2ecc71;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(46, 204, 113, 0.4);
+}
+
+.btn-glass-cancel {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    padding: 12px 35px;
+    border-radius: 50px;
+    font-weight: bold;
+    transition: 0.3s;
+    cursor: pointer;
+    text-decoration: none;
+}
+.btn-glass-cancel:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    transform: translateY(-2px);
+}
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }

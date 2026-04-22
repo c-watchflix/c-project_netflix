@@ -5,56 +5,73 @@
 @inject AdoUser Repo
 @inject NavigationManager Navigation
 
-<PageTitle>User Create</PageTitle>
+<PageTitle>Création Utilisateur - Admin Panel</PageTitle>
 
-<h5>Création d'un utilisateur</h5>
+<div class="dashboard-bg"></div>
 
-<form>
-    <div class="mb-3">
-        <label class="form-label">Nom</label>
-        <input class="form-control" @bind="newUser.Nom" />
+<div class="form-container">
+    <div class="glass-panel">
+        
+        <h2 class="fw-bold mb-4" style="text-shadow: 0 2px 10px rgba(0,0,0,0.5);">➕ Nouvel Utilisateur</h2>
+        <p class="text-white-50 mb-5">Remplissez les informations ci-dessous pour créer un nouveau compte.</p>
+
+        <form>
+            <div class="row g-4 mb-4">
+                <div class="col-md-6">
+                    <label class="glass-label">Nom</label>
+                    <input class="glass-input" placeholder="Ex: Dupont" @bind="newUser.Nom" />
+                </div>
+                <div class="col-md-6">
+                    <label class="glass-label">Prénom</label>
+                    <input class="glass-input" placeholder="Ex: Jean" @bind="newUser.Prenom" />
+                </div>
+            </div>
+
+            <div class="row g-4 mb-4">
+                <div class="col-md-6">
+                    <label class="glass-label">Email</label>
+                    <input type="email" class="glass-input" placeholder="jean.dupont@email.com" @bind="newUser.Courriel" />
+                </div>
+                <div class="col-md-6">
+                    <label class="glass-label">Pseudo</label>
+                    <input class="glass-input" placeholder="Jd123" @bind="newUser.Pseudo" />
+                </div>
+            </div>
+
+            <div class="row g-4 mb-5 align-items-end">
+                <div class="col-md-6">
+                    <label class="glass-label">Mot de passe</label>
+                    <input type="password" class="glass-input" placeholder="••••••••" @bind="newUser.Mdp" />
+                </div>
+                <div class="col-md-6 pb-2">
+                    <div class="form-check d-flex align-items-center">
+                        <input type="checkbox" class="form-check-input shadow-none" id="adminCheck" @bind="newUser.Is_admin" />
+                        <label class="form-check-label text-white" for="adminCheck">
+                            Donner les droits Administrateur
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex gap-3 justify-content-end mt-4 pt-3" style="border-top: 1px solid rgba(255,255,255,0.1);">
+                <button type="button" class="btn-glass-cancel" @onclick='() => Navigation.NavigateTo("/admin/user")'>
+                    Annuler
+                </button>
+                <button type="button" class="btn-glass-submit" @onclick="create">
+                    💾 Créer l'utilisateur
+                </button>
+            </div>
+        </form>
+
     </div>
-
-    <div class="mb-3">
-        <label class="form-label">Prénom</label>
-        <input class="form-control" @bind="newUser.Prenom" />
-    </div>
-
-    <div class="mb-3">
-        <label class="form-label">Email</label>
-        <input type="email" class="form-control" @bind="newUser.Courriel" />
-    </div>
-
-    <div class="mb-3">
-        <label class="form-label">Pseudo</label>
-        <input class="form-control" @bind="newUser.Pseudo" />
-    </div>
-
-    <div class="mb-3">
-        <label class="form-label">Mot de passe</label>
-        <input type="password" class="form-control" @bind="newUser.Mdp" />
-    </div>
-
-    <div class="mb-3 form-check">
-        <input type="checkbox" class="form-check-input" @bind="newUser.Is_admin" />
-        <label class="form-check-label">Admin</label>
-    </div>
-
-    <button type="button" class="btn btn-primary" @onclick="create">
-        Envoyer
-    </button>
-</form>
-
+</div>
 
 @code {
-
-    private User newUser = new User(
-      "", "", "", "", "", false
-    );
+    private User newUser = new User("", "", "", "", "", false);
+    
     private void create()
     {
         AdoUser.create(newUser);
         Navigation.NavigateTo("/admin/user");
     }
-
 }
