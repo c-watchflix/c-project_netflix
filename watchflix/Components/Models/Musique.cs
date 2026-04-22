@@ -16,8 +16,10 @@ namespace watchflix.Models
         private string? couverture;
         private string? idYoutube;
 
+        private string? lien; 
+
         // Constructeurs
-        public Musique(int id, string titre, TimeSpan duree, string album, string couverture, string idYoutube)
+        public Musique(int id, string titre, TimeSpan duree, string album, string couverture, string idYoutube, string lien)
         {
             this.id = id;
             this.titre = titre;
@@ -25,15 +27,17 @@ namespace watchflix.Models
             this.album = album;
             this.couverture = couverture;
             this.idYoutube = idYoutube;
+            this.lien = lien;
         }
 
-        public Musique(string titre, TimeSpan duree, string album, string couverture, string idYoutube)
+        public Musique(string titre, TimeSpan duree, string album, string couverture, string idYoutube, string lien)
         {
             this.titre = titre;
             this.duree = duree;
             this.album = album;
             this.couverture = couverture;
             this.idYoutube = idYoutube;
+            this.lien = lien;
         }
 
         public Musique(int id, string titre)
@@ -49,5 +53,6 @@ namespace watchflix.Models
         public string Album { get => album; set => album = value; }
         public string Couverture { get => couverture; set => couverture = value; }
         public string IdYoutube { get => idYoutube; set => idYoutube = value; }
+        public string Lien { get => lien; set => lien = value; }
     }
 }
