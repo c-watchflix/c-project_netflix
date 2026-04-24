@@ -1,0 +1,122 @@
+@page "/register"
+@layout watchflix.Components.Layout.EmptyLayout
+@rendermode InteractiveServer
+@using watchflix.Models
+@using watchflix.Repositories
+@inject AdoUser Repo
+@inject NavigationManager Navigation
+
+<PageTitle>Créer un compte - WatchFlix</PageTitle>
+
+<div class="login-master-wrapper">
+    
+    <div class="earth-bg"></div>
+
+    <div class="login-page-container">
+        <div class="glass-login-box" style="max-width: 600px;">
+            
+            <h1 class="brand-title">🎬 WatchFlix</h1>
+            <h3>Créer un compte</h3>
+            <p class="text-white-50 mb-4">Rejoignez WatchFlix et découvrez votre cinéma</p>
+
+            <form>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label class="glass-label">Nom</label>
+                        <input class="glass-input form-control" placeholder="Ex: Dupont" @bind="newUser.Nom" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="glass-label">Prénom</label>
+                        <input class="glass-input form-control" placeholder="Ex: Jean" @bind="newUser.Prenom" />
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="glass-label">Email</label>
+                    <input type="email" class="glass-input form-control" placeholder="jean.dupont@email.com" @bind="newUser.Courriel" />
+                </div>
+
+                <div class="mb-4">
+                    <label class="glass-label">Pseudo</label>
+                    <input class="glass-input form-control" placeholder="Jd123" @bind="newUser.Pseudo" />
+                </div>
+
+                <div class="mb-5">
+                    <label class="glass-label">Mot de passe</label>
+                    <input type="password" class="glass-input form-control" placeholder="••••••••" @bind="newUser.Mdp" />
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+                {
+                    <div class="mt-4 p-3 mb-4" style="background: rgba(231, 76, 60, 0.2); border: 1px solid rgba(231, 76, 60, 0.5); color: #ffcccc; border-radius: 12px; font-weight: bold;">
+                        @ErrorMessage
+                    </div>
+                }
+
+                <div class="d-flex gap-3 justify-content-center mt-4 pt-3" style="border-top: 1px solid rgba(255,255,255,0.1);">
+                    <button type="button" class="btn-glass-cancel" @onclick='() => Navigation.NavigateTo("/login")'>
+                        Retour
+                    </button>
+                    <button type="button" class="btn-glass-submit" @onclick="create" disabled="@isLoading">
+                        @if (isLoading)
+                        {
+                            <span>Création en cours...</span>
+                        }
+                        else
+                        {
+                            <span>💾 Créer mon compte</span>
+                        }
+                    </button>
+                </div>
+            </form>
+
+            <div class="text-center mt-4">
+                <p class="text-white-50">Vous avez déjà un compte ? <a href="/login" style="color: #00d4ff; text-decoration: none;">Se connecter</a></p>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+@code {
+    private User newUser = new User("", "", "", "", "", false);
+    private string ErrorMessage = string.Empty;
+    private bool isLoading = false;
+    
+    private void create()
+    {
+        ErrorMessage = string.Empty;
+        isLoading = true;
+
+        try
+        {
+            // Validation basique
+            if (string.IsNullOrWhiteSpace(newUser.Nom) || string.IsNullOrWhiteSpace(newUser.Prenom) ||
+                string.IsNullOrWhiteSpace(newUser.Courriel) || string.IsNullOrWhiteSpace(newUser.Pseudo) ||
+                string.IsNullOrWhiteSpace(newUser.Mdp))
+            {
+                ErrorMessage = "Tous les champs sont requis.";
+                isLoading = false;
+                return;
+            }
+
+            if (newUser.Mdp.Length < 6)
+            {
+                ErrorMessage = "Le mot de passe doit contenir au moins 6 caractères.";
+                isLoading = false;
+                return;
+            }
+
+            // L'utilisateur n'est pas admin (is_admin = false)
+            AdoUser.create(newUser);
+            Navigation.NavigateTo("/login");
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = "Une erreur est survenue lors de la création du compte. Veuillez réessayer.";
+            Console.WriteLine($"Erreur: {ex.Message}");
+            isLoading = false;
+        }
+    }
+}
