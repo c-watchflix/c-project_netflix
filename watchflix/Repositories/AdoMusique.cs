@@ -8,12 +8,6 @@ namespace watchflix.Repositories;
 public class AdoMusique : Ado
 {
 
-    public AdoMusique(IConfiguration _configuration) : base(_configuration)
-    {
-        Configuration = _configuration;
-        cs = Configuration.GetConnectionString("DefaultConnection");
-    }
-
     public static List<Musique> GetAll()
     {
         List<Musique> musiques = new List<Musique>();

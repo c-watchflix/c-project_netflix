@@ -8,12 +8,6 @@ namespace watchflix.Repositories
 {
     internal class AdoFilm : Ado
     {
-        public AdoFilm(IConfiguration _configuration) : base(_configuration)
-        {
-            Configuration = _configuration;
-            cs = Configuration.GetConnectionString("DefaultConnection");
-        }
-
         // =====================================================================
         // --- 1. MÉTHODES ORIGINALES (Conservées pour rétrocompatibilité) ---
         // =====================================================================
@@ -44,7 +38,7 @@ namespace watchflix.Repositories
                     reader.GetString(9)  // duree_film
                 ));
             }
-            //getTimeOnly ou DateOnly n'existe as, il faut faire la conversion manuellement 
+            //getTimeOnly ou DateOnly n'existe pas, il faut faire la conversion manuellement 
             close();
             return films;
         }

@@ -1,218 +1,232 @@
 @page "/admin/film"
+@layout watchflix.Components.Layout.AdminLayout
 @rendermode InteractiveServer
+@implements IDisposable
 @using watchflix.Models
 @using watchflix.Repositories
+@using Microsoft.Data.SqlClient
+@using System.Threading
 @inject AdoFilm Repo
 @inject NavigationManager Navigation
 
-<PageTitle>Films</PageTitle>
+<PageTitle>Films - Admin Panel</PageTitle>
 
-<div class="d-flex justify-content-end">
-    <button class="btn btn-primary btn-lg" @onclick='() => Navigation.NavigateTo("/admin/videotheque-api")'>Ajouter un film</button>
+@if (imagesFond.Any())
+{
+    <div class="dashboard-bg" style="background-image: url('@imagesFond[indexImageActuelle]');"></div>
+}
+
+<div class="user-container">
+    
+    <div class="header-glass">
+        <h2 class="m-0 fw-bold" style="text-shadow: 0 2px 10px rgba(0,0,0,0.5); white-space: nowrap;">🎬 Gestion des Films BDD</h2>
+        
+        <div class="search-pill mx-lg-4">
+            <span style="margin-right: 10px; opacity: 0.6;">🔍</span>
+            <input class="search-input" type="search" placeholder="Rechercher par titre ou réalisateur..." @bind="wordSearch" @bind:event="oninput">
+        </div>
+
+        <button class="btn-glass-add" @onclick='() => Navigation.NavigateTo("/admin/videotheque-api")'>
+            ➕ Ajouter un film
+        </button>
+    </div>
+
+    <div class="table-glass-container">
+        <table class="table-glass">
+            <thead>
+                <tr>
+                    <th scope="col">Titre</th>
+                    <th scope="col">Réalisateur</th>
+                    <th scope="col">Date de sortie</th>
+                    <th scope="col">Durée</th>
+                    <th scope="col">Pegi</th>
+                    <th scope="col">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (dataSearch != null && dataSearch.Any())
+                {
+                    @foreach(Film film in dataSearch)
+                    {
+                        <tr>
+                            <td class="fw-bold">@film.Titre</td>
+                            <td style="opacity: 0.8;">@film.Realisateur</td>
+                            <td style="opacity: 0.8;">
+                                @(string.IsNullOrEmpty(film.Dte_sortie) ? "N/A" : film.Dte_sortie.Split(" ")[^2])
+                            </td>
+                            <td style="opacity: 0.8;">@film.Duree</td>
+                            <td><span class="badge bg-danger px-2 py-1">@film.Pegi</span></td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="btn-action btn-details" @onclick="() => OpenModal(film)">👁️ Détails</button>
+                                    <button class="btn-action btn-delete" @onclick="() => OpenDeleteModal(film)">🗑️ Supprimer</button>
+                                </div>
+                            </td>
+                        </tr>  
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="6" class="text-center py-5" style="opacity: 0.5;">
+                            Aucun film trouvé pour cette recherche.
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 </div>
 
-@if (data != null)
+@if (selectedFilm != null)
 {
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th scope="col">Titre</th>
-                <th scope="col">Réalisateur</th>
-                <th scope="col">Date de sortie</th>
-                <th scope="col">Durée</th>
-                <th scope="col">Pegi</th>
-                <th scope="col">Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach(Film film in data)
-            {
-                <tr>
-                    <td> @film.Titre </td>
-                    <td> @film.Realisateur </td>
-                    <td> @film.Dte_sortie.Split(" ")[^2] </td>
-                    <td> @film.Duree </td>
-                    <td> @film.Pegi </td>
-                    <td>
-                        <button class="btn btn-secondary" @onclick="() => OpenModal(film)">Voir détails</button>
-                        <button class="btn btn-danger" @onclick="() => OpenDeleteModal(film)">Supprimer</button>
-                    </td>
-                </tr>  
-            }
-
-        </tbody>
-    </table>
-
-    
-    @if (selectedFilm != null)
-    {
-        <div class="modal fade show"
-            style="display:block">
-
-            <div class="modal-dialog modal-xl modal-dialog-centered">
-                <div class="modal-content border-0 shadow rounded-4">
-                    <!-- HEADER -->
-                    <div class="modal-header border-0 pb-3 pt-4 px-4">
-
-                        <div>
-                            <h3 class="fw-bold mb-1 text-dark">
-                                @selectedFilm.Titre
-                            </h3>
-                            <small class="text-muted">
-                                Fiche détaillée du film
-                            </small>
-                        </div>
-
-                        <button class="btn-close"
-                                @onclick="CloseModal">
-                        </button>
+    <div class="modal fade show" style="display:block; z-index: 1055;">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4 glass-modal-content">
+                
+                <div class="modal-header glass-modal-header pb-3 pt-4 px-4">
+                    <div>
+                        <h3 class="fw-bold mb-1">@selectedFilm.Titre</h3>
+                        <small style="opacity: 0.6;">Fiche détaillée du film</small>
                     </div>
-
-                    <!-- BODY -->
-                    <div class="modal-body px-4">
-
-                        <!-- Grid Infos -->
-                        <div class="row g-4 mb-4">
-
-                            <div class="col-md-3">
-                                <div class="p-3 bg-light rounded-3">
-                                    <small class="text-muted d-block">
-                                        Année de sortie
-                                    </small>
-                                    <span class="fw-semibold">
-                                        @selectedFilm.Dte_sortie.Split(" ")[^2]
-                                    </span>
-                                </div>
-                            </div>
-
-                            <div class="col-md-3">
-                                <div class="p-3 bg-light rounded-3">
-                                    <small class="text-muted d-block">
-                                        Durée
-                                    </small>
-                                    <span class="fw-semibold">
-                                        @selectedFilm.Duree min
-                                    </span>
-                                </div>
-                            </div>
-
-                            <div class="col-md-3">
-                                <div class="p-3 bg-light rounded-3">
-                                    <small class="text-muted d-block">
-                                        Réalisateur
-                                    </small>
-                                    <span class="fw-semibold">
-                                        @selectedFilm.Realisateur
-                                    </span>
-                                </div>
-                            </div>
-
-                            <div class="col-md-3">
-                                <div class="p-3 bg-light rounded-3">
-                                    <small class="text-muted d-block">
-                                        Classification
-                                    </small>
-                                    <span class="badge bg-danger px-3 py-2">
-                                        @selectedFilm.Pegi
-                                    </span>
-                                </div>
-                            </div>
-
-                        </div>
-
-                        <!-- Synopsis Card -->
-                        <div class="card border-0 shadow-sm rounded-4">
-                            <div class="card-body">
-                                <h5 class="fw-bold mb-3">
-                                    Synopsis
-                                </h5>
-                                <p class="text-muted mb-0">
-                                    @selectedFilm.Synopsys
-                                </p>
-                            </div>
-                        </div>
-
-                    </div>
+                    <button class="btn-close btn-close-white" @onclick="CloseModal"></button>
                 </div>
 
-            </div>
-        </div>  
-        <!-- BACKDROP -->
-        <div class="modal-backdrop fade show"></div> //fond grisé derrière les modales
-    }
-
-    @if (filmToDelete != null)
-    {
-        <div class="modal fade show"
-            style="display:block; background-color:rgba(0,0,0,0.5);">
-
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-
-                    <div class="modal-header">
-                        <h5 class="modal-title">Confirmation</h5>
-                        <button class="btn-close"
-                                @onclick="CloseDeleteModal">
-                        </button>
+                <div class="modal-body px-4 pt-4">
+                    <div class="row g-4 mb-4">
+                        <div class="col-md-3">
+                            <div class="p-3 rounded-3 glass-card-info text-center">
+                                <small class="d-block mb-1" style="opacity: 0.6;">Année de sortie</small>
+                                <span class="fw-bold fs-5">@(string.IsNullOrEmpty(selectedFilm.Dte_sortie) ? "N/A" : selectedFilm.Dte_sortie.Split(" ")[^2])</span>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-3 rounded-3 glass-card-info text-center">
+                                <small class="d-block mb-1" style="opacity: 0.6;">Durée</small>
+                                <span class="fw-bold fs-5">@selectedFilm.Duree</span>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-3 rounded-3 glass-card-info text-center">
+                                <small class="d-block mb-1" style="opacity: 0.6;">Réalisateur</small>
+                                <span class="fw-bold fs-5">@selectedFilm.Realisateur</span>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-3 rounded-3 glass-card-info text-center">
+                                <small class="d-block mb-1" style="opacity: 0.6;">Classification</small>
+                                <span class="badge bg-danger fs-5">@selectedFilm.Pegi</span>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="modal-body">
-                        Voulez-vous vraiment supprimer le film :
-
-                        <strong>
-                            @filmToDelete.Titre
-                        </strong> ?
+                    <div class="p-4 rounded-4 glass-card-info mb-3">
+                        <h5 class="fw-bold mb-3" style="color: #3498db;">Synopsis</h5>
+                        <p class="mb-0" style="line-height: 1.6; opacity: 0.9;">@selectedFilm.Synopsys</p>
                     </div>
-
-                    <div class="modal-footer">
-
-                        <button class="btn btn-secondary"
-                                @onclick="CloseDeleteModal">
-                            Annuler
-                        </button>
-
-                        <button class="btn btn-danger"
-                                @onclick="ConfirmDelete">
-                            Supprimer
-                        </button>
-
-                    </div>
-
                 </div>
             </div>
         </div>
-    }
+    </div>  
+    <div class="modal-backdrop fade show" style="background-color: rgba(0,0,0,0.8); z-index: 1040;"></div>
+}
 
-} 
+@if (filmToDelete != null)
+{
+    <div class="modal fade show" style="display:block; z-index: 1055;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4 glass-modal-content">
 
+                <div class="modal-header glass-modal-header">
+                    <h5 class="modal-title fw-bold text-danger">⚠️ Confirmation de suppression</h5>
+                    <button class="btn-close btn-close-white" @onclick="CloseDeleteModal"></button>
+                </div>
 
+                <div class="modal-body text-center py-4">
+                    <p class="mb-1 fs-5">Voulez-vous vraiment supprimer le film :</p>
+                    <strong class="fs-4 text-white">@filmToDelete.Titre</strong> ?
+                </div>
+
+                <div class="modal-footer glass-modal-footer border-0 justify-content-center">
+                    <button class="btn btn-secondary px-4 rounded-pill" @onclick="CloseDeleteModal">Annuler</button>
+                    <button class="btn btn-danger px-4 rounded-pill" @onclick="ConfirmDelete">Oui, supprimer</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade show" style="background-color: rgba(0,0,0,0.8); z-index: 1040;"></div>
+}
 
 @code {
     IEnumerable<Film>? data;
-    IEnumerable<Film>? oneByID;
-    IEnumerable<Film>? oneByName;
+    string wordSearch = ""; // Le texte tapé dans la barre de recherche
     Film? selectedFilm;
     Film? filmToDelete;
 
-    protected override void OnInitialized()
+    // --- LOGIQUE DE RECHERCHE DYNAMIQUE ---
+    IEnumerable<Film> dataSearch => data?.Where(f => 
+        (f.Titre?.Contains(wordSearch, StringComparison.OrdinalIgnoreCase) ?? false) || 
+        (f.Realisateur?.Contains(wordSearch, StringComparison.OrdinalIgnoreCase) ?? false)) 
+        ?? Enumerable.Empty<Film>();
+
+    // --- VARIABLES CARROUSEL ---
+    private List<string> imagesFond = new List<string>();
+    private int indexImageActuelle = 0;
+    private Timer? timerCarrousel;
+
+    protected override async Task OnInitializedAsync()
     {
         data = AdoFilm.getAll();
+        await ChargerImagesFond();
+
+        if (imagesFond.Count > 1)
+        {
+            timerCarrousel = new Timer(ChangerImageBackground, null, 3000, 3000);
+        }
     }
 
-    private void GetOneByID()
+    private async Task ChargerImagesFond()
     {
-        oneByID = AdoFilm.getOneById(5);
+        string connectionString = watchflix.Repositories.Ado.GetConnectionString();
+        try
+        {
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                await conn.OpenAsync();
+                using (SqlCommand cmd = new SqlCommand("SELECT fond FROM Film WHERE fond IS NOT NULL AND fond != '' AND fond != 'N/A'", conn))
+                using (SqlDataReader reader = await cmd.ExecuteReaderAsync())
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        if (!reader.IsDBNull(0))
+                        {
+                            string fond = reader.GetString(0);
+                            if (fond.StartsWith("/")) fond = $"https://image.tmdb.org/t/p/w1280{fond}";
+                            if (!imagesFond.Contains(fond)) imagesFond.Add(fond);
+                        }
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur chargement images : {ex.Message}");
+        }
     }
 
-    private void GetOneByName()
+    private void ChangerImageBackground(object? state)
     {
-        oneByName = AdoFilm.getOneByName("Zootopie");
+        if (imagesFond.Any())
+        {
+            indexImageActuelle = (indexImageActuelle + 1) % imagesFond.Count;
+            InvokeAsync(StateHasChanged);
+        }
     }
 
-    private void Delete(int Id_film)
+    public void Dispose()
     {
-        AdoFilm.delete(Id_film);
-        data = AdoFilm.getAll(); // refresh de la liste
+        timerCarrousel?.Dispose();
     }
 
     private void OpenModal(Film film)
@@ -235,10 +249,8 @@
         if (filmToDelete != null)
         {
             AdoFilm.delete(filmToDelete.id);
-            @* data = data!.Where(f => f.Id_film != filmToDelete.Id_film).ToList(); *@
             data = AdoFilm.getAll();
         }
-
         filmToDelete = null;
     }
 
@@ -246,5 +258,4 @@
     {
         filmToDelete = null;
     }
-
 }

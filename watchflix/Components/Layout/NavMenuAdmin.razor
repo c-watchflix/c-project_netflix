@@ -1,30 +1,196 @@
-<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">watchflix</a>
+@using Microsoft.AspNetCore.Components.Routing
+
+<style>
+    /* --- STRUCTURE DU MENU LATÉRAL --- */
+    .glass-sidebar {
+        width: 280px;
+        height: 100vh;
+        background: rgba(20, 20, 20, 0.7);
+        backdrop-filter: blur(25px);
+        -webkit-backdrop-filter: blur(25px);
+        border-right: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 5px 0 30px rgba(0,0,0,0.5);
+        display: flex;
+        flex-direction: column;
+        position: fixed;
+        left: 0;
+        top: 0;
+        z-index: 1000;
+    }
+
+    /* --- LOGO / TITRE --- */
+    .sidebar-brand {
+        padding: 40px 20px;
+        text-align: center;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        margin-bottom: 20px;
+    }
+
+    .sidebar-brand h3 {
+        color: white;
+        font-weight: bold;
+        margin: 0;
+        font-size: 1.5rem;
+        letter-spacing: 1px;
+        text-shadow: 0 0 15px rgba(255,255,255,0.2);
+    }
+
+    /* --- LIENS DE NAVIGATION --- */
+    .nav-menu {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding: 0 20px;
+    }
+
+    a.nav-link-custom {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 15px 20px;
+        color: rgba(255, 255, 255, 0.6) !important;
+        text-decoration: none !important;
+        border-radius: 12px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        border: 1px solid transparent;
+    }
+
+    a.nav-link-custom:hover {
+        background: rgba(255, 255, 255, 0.05) !important;
+        color: white !important;
+        transform: translateX(5px);
+    }
+
+    a.nav-link-custom.active {
+        background: rgba(46, 204, 113, 0.15) !important;
+        color: #2ecc71 !important;
+        border: 1px solid rgba(46, 204, 113, 0.3) !important;
+        box-shadow: 0 0 20px rgba(46, 204, 113, 0.1) !important;
+    }
+
+    .nav-icon {
+        font-size: 1.3rem;
+    }
+
+    /* --- BLOC UTILISATEUR & DÉCONNEXION --- */
+    .user-profile-section {
+        margin-top: auto; 
+        padding: 20px;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .user-info {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 10px;
+        margin-bottom: 15px;
+    }
+
+    .user-avatar {
+        width: 45px;
+        height: 45px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 1.5rem;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .user-details {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .user-name {
+        color: white;
+        font-weight: bold;
+        font-size: 0.95rem;
+        margin: 0;
+    }
+
+    .user-role {
+        color: #2ecc71;
+        font-size: 0.8rem;
+        margin: 0;
+        font-weight: 500;
+    }
+
+    .btn-logout {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        padding: 12px;
+        background: rgba(231, 76, 60, 0.1);
+        color: #e74c3c;
+        border: 1px solid rgba(231, 76, 60, 0.2);
+        border-radius: 12px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .btn-logout:hover {
+        background: rgba(231, 76, 60, 0.3);
+        color: white;
+        box-shadow: 0 0 15px rgba(231, 76, 60, 0.3);
+    }
+</style>
+
+<div class="glass-sidebar">
+    <div class="sidebar-brand">
+        <h3>&#x2699;&#xFE0F; Admin Panel</h3>
+    </div>
+
+    <nav class="nav-menu">
+        <NavLink class="nav-link-custom" href="/admin" Match="NavLinkMatch.All">
+            <span class="nav-icon">&#x1F4CA;</span>
+            <span>Accueil</span>
+        </NavLink>
+
+        <NavLink class="nav-link-custom" href="/admin/user">
+            <span class="nav-icon">&#x1F465;</span>
+            <span>Utilisateurs</span>
+        </NavLink>
+
+        <NavLink class="nav-link-custom" href="/admin/film">
+            <span class="nav-icon">&#x1F3AC;</span>
+            <span>Gestion films BDD</span>
+        </NavLink>
+
+        <NavLink class="nav-link-custom" href="/ma-videotheque">
+            <span class="nav-icon">&#x1F37F;</span>
+            <span>Côté Utilisateurs</span>
+        </NavLink>
+    </nav>
+
+    <div class="user-profile-section">
+        
+        <div class="user-info">
+            <div class="user-avatar">
+                &#x1F464;
+            </div>
+            <div class="user-details">
+                <p class="user-name">Prénom Nom</p>
+                <p class="user-role">Administrateur</p>
+            </div>
+        </div>
+
+        <button class="btn-logout" @onclick="FausseDeconnexion">
+            <span>Déconnexion</span>
+        </button>
+
     </div>
 </div>
 
-<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
-
-<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
-    <nav class="nav flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="admin/user">
-                <span class="bi bi-people-fill" aria-hidden="true"></span> Users
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="admin/film">
-                <span class="bi bi-film" aria-hidden="true"></span> Films
-            </NavLink>
-        </div>
-    </nav>
-</div>
-
+@code {
+    private void FausseDeconnexion()
+    {
+        Console.WriteLine("Clic sur déconnexion. À brancher par l'autre dev !");
+    }
+}

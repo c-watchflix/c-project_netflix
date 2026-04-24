@@ -25,19 +25,25 @@ public class YoutubeServiceOfficial
         
 
         var searchResponse = await searchRequest.ExecuteAsync();
-
+        var videoIds = searchResponse.Items
+            .Where(i => i.Id.VideoId != null)
+            .Select(i => i.Id.VideoId)
+            .ToList();
+        var videoRequest = _youtube.Videos.List("contentDetails,snippet");
+        videoRequest.Id = string.Join(",", videoIds);
+ 
+        var videoResponse = await videoRequest.ExecuteAsync();
         var musiques = new List<Musique>();
 
         foreach (var item in searchResponse.Items)
         {
-            var durationSpan = await GetVideoDurationAsync(item.Id.VideoId);
+            var durationSpan = System.Xml.XmlConvert.ToTimeSpan(videoResponse.Items[0].ContentDetails.Duration);
 
-            string durationString = durationSpan.ToString(@"mm\:ss");
             musiques.Add(new Musique(
                 titre: item.Snippet.Title,
-                duree: durationSpan,
-                album: item.Snippet.ChannelTitle ?? "",
-                couverture: item.Snippet.Thumbnails.Medium?.Url ?? "",
+                duree: durationSpan, // récupérable via GetVideoDetails
+                album: "",
+                couverture: item.Snippet.Thumbnails.Medium.Url,
                 idYoutube: item.Id.VideoId,
                 lien: ""
             ));
