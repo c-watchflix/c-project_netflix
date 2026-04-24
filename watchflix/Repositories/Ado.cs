@@ -25,6 +25,11 @@ namespace watchflix.Repositories
             }
         }
 
+        public static string GetConnectionString()
+        {
+            return cs;
+        }
+
         public static void open()
         {
             try
