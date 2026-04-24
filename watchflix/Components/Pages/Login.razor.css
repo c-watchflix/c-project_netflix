@@ -1,0 +1,176 @@
+/* --- LE CONTENEUR MAÎTRE QUI BLOQUE LE SCROLL --- */
+.login-master-wrapper {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden !important;
+    background-color: #050505;
+}
+
+/* --- 1. ARRIÈRE-PLAN TERRE --- */
+.earth-bg {
+    position: absolute;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    background-image: url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop');
+    background-size: cover;
+    background-position: center;
+    filter: blur(8px) brightness(0.25);
+    z-index: 1; 
+    transform: scale(1.1);
+}
+
+/* --- 2. COLONNES DE JAQUETTES (DÉFILEMENT INFINI) --- */
+.scrolling-wrapper {
+    position: absolute;
+    top: -15%; left: -5%; width: 110vw; height: 130vh;
+    display: flex;
+    justify-content: space-between; 
+    align-items: flex-start;
+    gap: 15px;
+    z-index: 2; 
+    opacity: 0.55; 
+    transform: rotate(-6deg); 
+    pointer-events: none; 
+    mask-image: linear-gradient(to bottom, transparent, black 15%, black 85%, transparent);
+    -webkit-mask-image: linear-gradient(to bottom, transparent, black 15%, black 85%, transparent);
+}
+
+.poster-column {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    width: 13vw; 
+    flex-shrink: 0;
+}
+
+.poster-column img {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.9);
+}
+
+/* Animations de défilement vers le haut */
+@keyframes scrollUp {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(-50%); } 
+}
+
+/* VITESSE DIVISÉE PAR 3 POUR ÉVITER LE TOURNIS (Entre 90 et 120 secondes !) */
+.col-speed-1 { animation: scrollUp 90s linear infinite; }
+.col-speed-2 { animation: scrollUp 110s linear infinite; }
+.col-speed-3 { animation: scrollUp 100s linear infinite; }
+.col-speed-4 { animation: scrollUp 120s linear infinite; }
+.col-speed-5 { animation: scrollUp 95s linear infinite; }
+.col-speed-6 { animation: scrollUp 105s linear infinite; }
+.col-speed-7 { animation: scrollUp 115s linear infinite; }
+
+/* --- 3. FORMULAIRE GLASSMORPHISM --- */
+.login-page-container {
+    position: absolute;
+    top: 0; left: 0;
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10; 
+}
+
+.glass-login-box {
+    background: rgba(20, 20, 20, 0.75);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 25px;
+    padding: 50px 60px;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.9);
+    text-align: center;
+    width: 100%;
+    max-width: 450px;
+    color: white;
+    animation: fadeIn 0.8s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.brand-title {
+    font-weight: 900;
+    font-size: 2.2rem;
+    margin-bottom: 5px;
+    background: linear-gradient(135deg, #3498db, #9b59b6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 2px 15px rgba(52, 152, 219, 0.3);
+}
+
+.glass-login-box h3 {
+    font-weight: 700;
+    font-size: 1.2rem;
+    margin-bottom: 40px;
+    color: rgba(255,255,255,0.6);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+.glass-label {
+    display: block;
+    text-align: left;
+    color: rgba(255,255,255,0.9);
+    margin-bottom: 8px;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+::deep .glass-input {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    color: white !important;
+    border-radius: 12px !important;
+    padding: 15px 20px !important;
+    width: 100% !important;
+    transition: all 0.3s ease !important;
+    outline: none !important;
+}
+
+::deep .glass-input:focus {
+    background: rgba(255, 255, 255, 0.15) !important;
+    border-color: #3498db !important;
+    box-shadow: 0 0 15px rgba(52, 152, 219, 0.4) !important;
+}
+
+::deep .glass-input::placeholder {
+    color: rgba(255,255,255,0.4) !important;
+}
+
+::deep .validation-message {
+    color: #ff6b6b;
+    font-size: 0.85rem;
+    text-align: left;
+    margin-top: 6px;
+    font-weight: bold;
+}
+
+.btn-glass-login {
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    border: none;
+    color: white;
+    padding: 15px;
+    border-radius: 50px;
+    font-weight: bold;
+    font-size: 1.1rem;
+    width: 100%;
+    margin-top: 30px;
+    cursor: pointer;
+    transition: 0.3s;
+    box-shadow: 0 10px 20px rgba(52, 152, 219, 0.4);
+}
+
+.btn-glass-login:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 15px 30px rgba(52, 152, 219, 0.6);
+}
