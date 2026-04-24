@@ -11,15 +11,24 @@ namespace watchflix.Repositories
     {
         // AJOUT DE "Pooling=false;" POUR EMPÊCHER LES CONNEXIONS FANTÔMES DE SATURER LE SERVEUR
     
-        public IConfiguration Configuration;
-        public static string cs = "";
-        public Ado(IConfiguration _configuration)
+        protected static string? cs;
+        protected static SqlConnection? connexion;
+
+        // Initialisation UNIQUE au démarrage
+        public static void Init(IConfiguration configuration)
         {
-            Configuration = _configuration;
-            cs = Configuration.GetConnectionString("Default");
+            cs = configuration.GetConnectionString("DefaultConnection");
+
+            if (string.IsNullOrEmpty(cs))
+            {
+                throw new Exception("ConnectionString 'Default' non trouvée !");
+            }
         }
 
-        protected static SqlConnection connexion;
+        public static string GetConnectionString()
+        {
+            return cs;
+        }
 
         public static void open()
         {

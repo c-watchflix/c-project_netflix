@@ -11,11 +11,6 @@ namespace watchflix.Repositories
 {
     internal class AdoUser : Ado
     {
-        public AdoUser(IConfiguration _configuration) : base(_configuration)
-        {
-            Configuration = _configuration;
-            cs = Configuration.GetConnectionString("DefaultConnection");
-        }
         public static void create(User user)
         {
             open();    //ouverture de la connexion a la bdd

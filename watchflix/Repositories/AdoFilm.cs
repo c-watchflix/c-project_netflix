@@ -8,12 +8,6 @@ namespace watchflix.Repositories
 {
     internal class AdoFilm : Ado
     {
-        public AdoFilm(IConfiguration _configuration) : base(_configuration)
-        {
-            Configuration = _configuration;
-            cs = Configuration.GetConnectionString("DefaultConnection");
-        }
-
         // =====================================================================
         // --- 1. MÉTHODES ORIGINALES (Conservées pour rétrocompatibilité) ---
         // =====================================================================
