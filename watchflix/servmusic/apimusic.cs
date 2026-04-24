@@ -35,10 +35,11 @@ public class YoutubeServiceOfficial
             string durationString = durationSpan.ToString(@"mm\:ss");
             musiques.Add(new Musique(
                 titre: item.Snippet.Title,
-                duree: durationSpan, // récupérable via GetVideoDetails
-                album: "",
-                couverture: item.Snippet.Thumbnails.Medium.Url,
-                idYoutube: item.Id.VideoId
+                duree: durationSpan,
+                album: item.Snippet.ChannelTitle ?? "",
+                couverture: item.Snippet.Thumbnails.Medium?.Url ?? "",
+                idYoutube: item.Id.VideoId,
+                lien: ""
             ));
         }
 
@@ -52,6 +53,7 @@ public class YoutubeServiceOfficial
 
         var videoResponse = await videoRequest.ExecuteAsync();
         var duration = videoResponse.Items[0].ContentDetails.Duration;
+        
 
         return System.Xml.XmlConvert.ToTimeSpan(duration);
     }
@@ -97,7 +99,8 @@ public class YoutubeServiceOfficial
                 duree:duration,
                 album:item.Snippet.ChannelTitle,
                 couverture: item.Snippet.Thumbnails.Medium.Url,
-                idYoutube : item.Id.VideoId
+                idYoutube : item.Id.VideoId,
+                lien: ""
             );
         }  
         return null;

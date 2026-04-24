@@ -333,21 +333,34 @@ else { <div class="movie-background" style="background-image: url('@filmSelectio
                     
                     <h3 class="mb-4 fw-light text-white-50" style="margin-top: 0;">🎵 Bande Originale</h3>
                     
-                    // ICI BANDE ORIGINALE
+                    @* ICI BANDE ORIGINALE  *@
                     <div style="max-height: 600px; overflow-y: auto; padding-right: 10px;">
-                        @foreach(var m in musiques)
+                        @if (musiques.Count == 0)
                         {
-                            <a href="@m.Lien" target="_blank" style="text-decoration:none; color:inherit;">
-                                <div class="music-track" style="cursor:pointer;">
-                                    <div style="width: 40px; height: 40px; background: rgba(255,255,255,0.1); border-radius: 8px; display:flex; align-items:center; justify-content:center; margin-right:12px; font-size: 1.2rem;">♫</div>
-                                    <div>
-                                        <div class="fw-bold">@m.Titre</div>
-                                        <div style="font-size: 0.8rem; opacity: 0.6;"> Durée : @m.Duree</div>
-                                        <div style="font-size: 0.8rem; opacity: 0.6;"> Album : @m.Album</div>
-                                    </div>
-                                    <div class="ms-auto text-white-50">▶</div>
+                            <div style="width: 40px; height: 40px; background: rgba(255,255,255,0.1); border-radius: 8px; display:flex; align-items:center; justify-content:center; margin-right:12px; font-size: 1.2rem;">♫</div>
+                                <div>
+                                    <div class="fw-bold">Aucune musique trouvée</div>
+                                    <div style="font-size: 0.8rem; opacity: 0.6;"> Durée : aucune </div>
+                                    <div style="font-size: 0.8rem; opacity: 0.6;"> Album : aucun</div>
                                 </div>
-                            </a>
+                        }
+                        else
+                        {
+                            @foreach(var m in musiques)
+                            {
+                                <a href="@m.Lien" target="_blank" style="text-decoration:none; color:inherit;">
+                                    <div class="music-track" style="cursor:pointer;">
+                                        <div style="width: 40px; height: 40px; background: rgba(255,255,255,0.1); border-radius: 8px; display:flex; align-items:center; justify-content:center; margin-right:12px; font-size: 1.2rem;">♫</div>
+                                        <div>
+                                            <div class="fw-bold">@m.Titre</div>
+                                            <div style="font-size: 0.8rem; opacity: 0.6;"> Durée : @m.Duree</div>
+                                            <div style="font-size: 0.8rem; opacity: 0.6;"> Album : @m.Album</div>
+                                        </div>
+                                        <div class="ms-auto text-white-50" @onclick="() => AjouterALaBddMusic(m)"> Télécharger </div>
+                                        <div class="ms-auto text-white-50">▶</div>
+                                    </div>
+                                </a>
+                            }
                         }
 
                     </div>
@@ -391,6 +404,8 @@ else { <div class="movie-background" style="background-image: url('@filmSelectio
 
     private List<Musique> musiques = new List<Musique>();
 
+    private List<Musique> nouvellesMusiques = new List<Musique>();
+
     private async Task ChercherFilm()
     {
         if (string.IsNullOrWhiteSpace(nomDuFilm)) return;
@@ -408,7 +423,7 @@ else { <div class="movie-background" style="background-image: url('@filmSelectio
         filmSelectionne = await TmdbService.GetMovieDetails(id);
         afficherTrailer = false;
         coeurActive = false;
-        var nouvellesMusiques = await YoutubeService.SearchMusicAsync(nomDuFilm);
+        nouvellesMusiques = await YoutubeService.SearchMusicAsync(@filmSelectionne.Title);
         musiques.AddRange(nouvellesMusiques);
     }
 
@@ -421,6 +436,16 @@ else { <div class="movie-background" style="background-image: url('@filmSelectio
             else AfficherNotification("Ce film est déjà dans votre collection !", "error");
         }
     }
+    private async Task AjouterALaBddMusic(Musique musique)
+    {
+        if (musiques != null)
+        {
+            bool success = await YoutubeService.SaveToDatabaseAsync(musique);
+            if (success) AfficherNotification("Musique ajoutée à votre bibliothèque !", "success");
+            else AfficherNotification("Cette musique est déjà dans votre collection !", "error");
+        }
+    }
+
 
     private async void AfficherNotification(string message, string type)
     {
@@ -451,5 +476,6 @@ else { <div class="movie-background" style="background-image: url('@filmSelectio
     {
         filmSelectionne = null;
         afficherTrailer = false;
+        musiques.Clear();
     }
 }

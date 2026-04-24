@@ -15,7 +15,6 @@ namespace watchflix.Models
         private string? album;
         private string? couverture;
         private string? idYoutube;
-
         private string? lien; 
 
         // Constructeurs
