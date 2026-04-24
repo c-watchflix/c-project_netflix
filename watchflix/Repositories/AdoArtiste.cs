@@ -7,11 +7,6 @@ using watchflix.Models;
 
 public class AdoArtiste : Ado
 {
-    public AdoArtiste(IConfiguration _configuration) : base(_configuration)
-    {
-        Configuration = _configuration;
-        cs = Configuration.GetConnectionString("DefaultConnection");
-    }
     public static List<Artiste> GetAllArtistes()
     {
         List<Artiste> artistes = new List<Artiste>();
