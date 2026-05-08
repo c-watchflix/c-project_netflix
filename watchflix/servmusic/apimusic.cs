@@ -59,6 +59,7 @@ public class YoutubeServiceOfficial
 
         var videoResponse = await videoRequest.ExecuteAsync();
         var duration = videoResponse.Items[0].ContentDetails.Duration;
+        
 
         return System.Xml.XmlConvert.ToTimeSpan(duration);
     }
