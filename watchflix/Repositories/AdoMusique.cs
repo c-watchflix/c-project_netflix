@@ -89,4 +89,27 @@ public class AdoMusique : Ado
 
         close();
     }
+
+    public static int AddMusique(Musique musique)
+    {
+        open();
+
+        SqlCommand cmd = new SqlCommand(@"
+            INSERT INTO Musique (titre_musique, duree_musique, album, couverture, youtube_id, lien)
+            OUTPUT INSERTED.id_musique
+            VALUES (@Titre, @Duree, @Album, @Couverture, @Youtube_id, @Lien)", connexion);
+
+        cmd.Parameters.AddWithValue("@Titre", musique.Titre);
+        cmd.Parameters.AddWithValue("@Duree", musique.Duree);
+        cmd.Parameters.AddWithValue("@Album", musique.Album ?? "");
+        cmd.Parameters.AddWithValue("@Couverture", musique.Couverture);
+        cmd.Parameters.AddWithValue("@Youtube_id", musique.IdYoutube);
+        cmd.Parameters.AddWithValue("@Lien", musique.Lien);
+
+        int id = (int)cmd.ExecuteScalar();
+
+        close();
+        return id;
+    }
+
 }

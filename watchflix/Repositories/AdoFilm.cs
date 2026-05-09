@@ -289,5 +289,76 @@ namespace watchflix.Repositories
                 close();
             }
         }
-    }
+
+        public static async Task<bool> FilmExisteAsync(string titreFilm)
+        {
+            try
+            {
+                open();
+
+                string query = "SELECT COUNT(*) FROM Film WHERE titre_film = @Titre";
+
+                SqlCommand cmd = new SqlCommand(query, connexion);
+
+                cmd.Parameters.AddWithValue("@Titre", titreFilm);
+
+                int count = (int)(await cmd.ExecuteScalarAsync() ?? 0);
+
+                return count > 0;
+            }
+            finally
+            {
+                close();
+            }
+        }
+
+        public static int GetFilmIdByTitre(string titre)
+        {
+            open();
+
+            SqlCommand cmd = new SqlCommand(
+                "SELECT id_film FROM Film WHERE titre_film = @Titre",
+                connexion);
+
+            cmd.Parameters.AddWithValue("@Titre", titre);
+
+            object result = cmd.ExecuteScalar();
+
+            close();
+
+            return result == null ? -1 : (int)result;
+        }
+
+    public static List<Musique> getMusics(int idFilm)
+        {
+            List<Musique> musiques = new List<Musique>();
+            open();
+            string query = "SELECT Musique.id_musique, Musique.titre_musique, Musique.duree_musique, Musique.album, Musique.couverture, Musique.youtube_id, Musique.lien FROM Musique " + 
+            "INNER JOIN film_musique  on film_musique.id_musique = Musique.id_musique where film_musique.id_film = @idFilm";
+
+
+            
+            SqlCommand cmd = new SqlCommand(query, connexion);
+            cmd.Parameters.AddWithValue("@idFilm" , idFilm);
+            SqlDataReader reader = cmd.ExecuteReader();
+
+            while (reader.Read())
+            {
+                // On passe les variables dans L'ORDRE EXACT du constructeur de Film.cs :
+                // Constructeur : Film(Id, Titre, Pegi, Jacquette, Resume, Bande_annonce, Realisateur, Fond, Dte_sortie, Duree)
+                musiques.Add(new Musique(
+                    reader.GetInt32(0),  // id
+                    reader.GetString(1), // titre
+                    reader.GetTimeSpan(2), // durée
+                    reader.GetString(3), // album
+                    reader.GetString(4), // couvertur
+                    reader.GetString(5), // youtube_id
+                    reader.GetString(6) // lien
+                ));
+            }
+            //getTimeOnly ou DateOnly n'existe pas, il faut faire la conversion manuellement 
+            close();
+            return musiques;
+        }
+    }    
 }
