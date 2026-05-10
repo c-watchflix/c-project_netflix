@@ -12,11 +12,11 @@ namespace watchflix.Models
     {
         //attributs
         public int id;
-        public string nom;
-        public string prenom;
-        public string courriel;
-        public string pseudo;
-        public string mdp;
+        public string? nom;
+        public string? prenom;
+        public string? courriel;
+        public string? pseudo;
+        public string? mdp;
         public bool is_admin;
 
 

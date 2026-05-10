@@ -116,6 +116,9 @@
         {
             ErrorMessage = "Une erreur est survenue lors de la création du compte. Veuillez réessayer.";
             Console.WriteLine($"Erreur: {ex.Message}");
+            Console.WriteLine($"Stack: {ex.StackTrace}");
+            System.Diagnostics.Debug.WriteLine($"[REGISTER ERROR] {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"[REGISTER ERROR] {ex.StackTrace}");
             isLoading = false;
         }
     }

@@ -19,6 +19,8 @@ namespace watchflix.Repositories
 
             // Hachage du mot de passe avant l'insertion
             string hashedPassword = watchflix.Services.Authentification.HashPassword(user.Mdp);
+            System.Diagnostics.Debug.WriteLine($"[CREATE USER] Mdp brut: {user.Mdp}");
+            System.Diagnostics.Debug.WriteLine($"[CREATE USER] Mdp hashé: {hashedPassword}");
 
             cmd.CommandText = "INSERT INTO Utilisateur (nom, prenom, courriel, pseudo, mdp, is_admin) VALUES (@nom,@prenom,@courriel,@pseudo,@mdp,@is_admin)";
             cmd.Parameters.AddWithValue("@nom", user.Nom);
