@@ -2,6 +2,9 @@
 @using watchflix.Models
 @using watchflix.Repositories
 @rendermode InteractiveServer
+@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateProvider AuthStateProvider
+@inject HttpClient Http
 
 <style>
     /* --- BARRE DE NAVIGATION FLOTTANTE --- */
@@ -121,7 +124,11 @@
         <button class="user-avatar-btn" @onclick="GoToProfile"  title="Voir mon profil">
             <img src="https://ui-avatars.com/api/?name=User&background=random&color=fff" alt="Profil" class="user-avatar" />
         </button>
-        <button class="btn-login">Connexion</button>
+        
+    <button class="btn-login" @onclick="GoToLogin">
+        Connexion
+    </button>
+
     </div>
 </nav>
 
@@ -160,11 +167,7 @@
     private IEnumerable<Film> FilmsPopup => TousLesFilms
         .Where(f => f.Titre != null && f.Titre.Contains(_motCle, StringComparison.OrdinalIgnoreCase));
 
-    protected override void OnInitialized()
-    {
-        // On a retiré le AdoFilm.getAll() d'ici pour stopper le conflit !
-        Nav.LocationChanged += (s, e) => StateHasChanged(); 
-    }
+   
 
     // Si on appuie sur Entrée, on simule un clic sur "Voir plus"
     private void HandleKeyUp(KeyboardEventArgs e)
@@ -233,4 +236,26 @@
     {
         Nav.NavigateTo("/profil");
     }
+
+    private bool isAuthenticated;
+
+protected override async Task OnInitializedAsync()
+{
+    var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+    var user = authState.User;
+
+    isAuthenticated = user.Identity?.IsAuthenticated ?? false;
+
+    Nav.LocationChanged += (s, e) => StateHasChanged();
+}
+
+private void GoToLogin()
+{
+    Nav.NavigateTo("/login");
+}
+
+private void Logout()
+{
+    Nav.NavigateTo("api/auth/logout", forceLoad: true);
+}
 }
