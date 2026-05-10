@@ -191,23 +191,19 @@ else
                 </div>
             </div>
 
-            <div class="col-right">
+            <div class="col-right" style="max-height: 600px; overflow-y: auto; padding-right: 10px;">
                 <div class="music-title">🎵 Bande Originale</div>
                 
-                @for (int i = 1; i <= 4; i++)
+                @foreach (Musique m in musiques)
                 {
                     <div class="music-item">
                         <div class="music-info">
-                            <span class="music-name">Piste Musicale @i</span>
-                            <span class="music-artist">Artiste inconnu</span>
+                            <span class="music-name">@m.Titre</span>
+                            <span class="music-artist">@m.Duree</span>
                         </div>
-                        <span>▶</span>
+                        <span><a href="@m.Lien" target="_blank">▶</a></span>
                     </div>
                 }
-                
-                <div style="text-align: center; margin-top: auto; font-size: 0.75rem; color: rgba(255,255,255,0.5); border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;">
-                    L'intégration des vraies musiques arrive bientôt !
-                </div>
             </div>
 
         </div>
@@ -231,6 +227,7 @@ else
     private Film filmActuel;
     private List<string> categoriesDuFilm = new List<string>();
     
+    private List<Musique> musiques = new List<Musique>();
     private bool isExiting = false;
     private bool isTrailerOpen = false;
 
@@ -245,7 +242,10 @@ else
             {
                 categoriesDuFilm = toutesLesCategories[Id];
             }
+            musiques = AdoFilm.getMusics(filmActuel.id);
         }
+        
+
     }
 
     private async Task GoBackAvecAnimation()
