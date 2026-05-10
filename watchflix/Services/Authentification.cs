@@ -1,8 +1,6 @@
 using watchflix.Models;
 using watchflix.Repositories;
 using System.Diagnostics;
-using System.Security.Cryptography;
-using System.Text;
 using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
 
 namespace watchflix.Services
@@ -37,30 +35,20 @@ namespace watchflix.Services
 
         public static string HashPassword(string password)
         {
-            using (SHA256 sha256 = SHA256.Create())
-            {
-                byte[] bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
-                StringBuilder builder = new StringBuilder();
-                foreach (byte b in bytes)
-                {
-                    builder.Append(b.ToString("x2"));
-                }
-                return builder.ToString();
-            }
+            return password;
         }
 
         public User? Login(string pseudo, string mdp, out string errorMessage)
         {
             errorMessage = string.Empty;
 
-            // Hachage du mot de passe avant l'authentification
-            string hashedPassword = HashPassword(mdp);
+            string plainPassword = mdp;
 
             // Journalisation des informations d'entrée
-            Debug.WriteLine($"Tentative de connexion avec Pseudo: {pseudo}, Mot de passe haché: {hashedPassword}");
+            Debug.WriteLine($"Tentative de connexion avec Pseudo: {pseudo}, Mot de passe: {plainPassword}");
 
             // Appelle la méthode Authenticate dans AdoUser
-            User? user = AdoUser.Authenticate(pseudo, hashedPassword);
+            User? user = AdoUser.Authenticate(pseudo, plainPassword);
 
             if (user == null)
             {
@@ -75,13 +63,13 @@ namespace watchflix.Services
 
         public async Task<(User? user, string errorMessage)> LoginAsync(string pseudo, string mdp)
         {
-        return await Task.Run(() =>
-        {
-            string errorMessage;
-            User? user = Login(pseudo, mdp, out errorMessage);
-            return (user, errorMessage);
-        });
-    }
+            return await Task.Run(() =>
+            {
+                string errorMessage;
+                User? user = Login(pseudo, mdp, out errorMessage);
+                return (user, errorMessage);
+            });
+        }
 
         public async Task PersistUserAsync(User user)
         {
