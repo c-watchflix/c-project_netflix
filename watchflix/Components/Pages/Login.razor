@@ -70,6 +70,10 @@
                 </button>
             </EditForm>
 
+            <div class="text-center mt-4">
+                <p class="text-white-50">Vous n'avez pas de compte ? <a href="/register" style="color: #00d4ff; text-decoration: none; font-weight: bold;">Créer un compte</a></p>
+            </div>
+
             @if (!string.IsNullOrWhiteSpace(ErrorMessage))
             {
                 <div class="mt-4 p-3" style="background: rgba(231, 76, 60, 0.2); border: 1px solid rgba(231, 76, 60, 0.5); color: #ffcccc; border-radius: 12px; font-weight: bold;">
@@ -208,7 +212,7 @@
                 return;
             }
 
-            NavigationManager.NavigateTo("/", true);
+            NavigationManager.NavigateTo("/ma-videotheque", true);
         }
         catch (Exception ex)
         {
